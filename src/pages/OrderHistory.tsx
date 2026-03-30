@@ -146,8 +146,8 @@ export const OrderHistory: React.FC = () => {
             <Package size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-gray-900">Order History</h1>
-            <p className="text-gray-500 font-medium">View and track all your past orders</p>
+            <h1 className="text-3xl font-black text-gray-900">Online Order History</h1>
+            <p className="text-gray-500 font-medium">View and track all your past online orders</p>
           </div>
         </div>
 

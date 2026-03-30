@@ -30,7 +30,6 @@ export const Home: React.FC = () => {
   const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'none'>('none');
 
   useEffect(() => {
-    seedDatabase();
     const q = query(collection(db, 'products'));
     return onSnapshot(q, (snapshot) => {
       const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];

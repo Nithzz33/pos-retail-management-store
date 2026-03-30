@@ -37,12 +37,19 @@ export interface Sale {
     name: string;
     price: number;
     quantity: number;
+    subtotal: number;
   }[];
+  subtotal: number;
+  gstAmount: number;
+  discount: number;
   totalAmount: number;
   paymentMethod: 'cash' | 'online';
   paymentId?: string;
+  customerName?: string;
+  customerPhone?: string;
   createdAt: any;
   adminId: string;
+  type: 'store';
 }
 
 export interface Procurement {
@@ -81,6 +88,7 @@ export interface Order {
     quantity: number;
   }[];
   totalAmount: number;
+  paymentMethod: 'cash' | 'online';
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: any;
   deliveryAddress: string;

@@ -78,6 +78,41 @@
         "deliveryAddress": { "type": "string" }
       },
       "required": ["userId", "items", "totalAmount", "status", "createdAt", "deliveryAddress"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "A store sale recorded in POS",
+      "type": "object",
+      "properties": {
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "gstAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "online"] },
+        "paymentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "adminId": { "type": "string" },
+        "type": { "type": "string", "enum": ["store"] }
+      },
+      "required": ["items", "totalAmount", "paymentMethod", "createdAt", "adminId"]
+    },
+    "Procurement": {
+      "title": "Procurement",
+      "description": "Stock procurement record",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "quantity": { "type": "number" },
+        "costPrice": { "type": "number" },
+        "supplier": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "adminId": { "type": "string" }
+      },
+      "required": ["productId", "quantity", "createdAt", "adminId"]
     }
   },
   "firestore": {
@@ -100,6 +135,14 @@
     "/orders/{orderId}": {
       "schema": "Order",
       "description": "Customer orders"
+    },
+    "/store_sales/{saleId}": {
+      "schema": "Sale",
+      "description": "In-store POS sales"
+    },
+    "/procurements/{procurementId}": {
+      "schema": "Procurement",
+      "description": "Inventory procurement records"
     }
   }
 }

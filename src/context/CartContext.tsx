@@ -51,8 +51,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const existingItem = cartItems.find(item => item.productId === product.id);
     const cartRef = collection(db, `users/${auth.currentUser.uid}/cart`);
 
+    if (product.stock <= 0) {
+      throw new Error('Product is out of stock');
+    }
+
     try {
       if (existingItem) {
+        if (existingItem.quantity >= product.stock) {
+          throw new Error('Cannot add more than available stock');
+        }
         await updateDoc(doc(cartRef, existingItem.id), {
           quantity: existingItem.quantity + 1
         });
@@ -79,6 +86,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateQuantity = async (cartItemId: string, quantity: number) => {
     if (!auth.currentUser || quantity < 1) return;
+    
+    // Find the item to check stock
+    const item = cartItems.find(it => it.id === cartItemId);
+    if (item && item.product && quantity > item.product.stock) {
+      throw new Error('Cannot exceed available stock');
+    }
+
     try {
       await updateDoc(doc(db, `users/${auth.currentUser.uid}/cart`, cartItemId), { quantity });
     } catch (error) {

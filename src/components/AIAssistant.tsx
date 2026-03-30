@@ -89,7 +89,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ dataContext, last7Days
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="absolute bottom-20 right-0 w-[400px] bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col h-[600px]"
+            className="absolute bottom-20 right-0 w-[calc(100vw-40px)] md:w-[400px] bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-120px)] md:h-[600px]"
           >
             <div className="p-4 bg-[#FF3269] text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -115,7 +115,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ dataContext, last7Days
               )}
               {chat.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[90%] p-3 rounded-2xl text-xs font-medium ${
+                  <div className={`max-w-[95%] p-3 rounded-2xl text-xs font-medium ${
                     msg.role === 'user' 
                       ? 'bg-[#FF3269] text-white rounded-tr-none shadow-md' 
                       : 'bg-white text-gray-800 rounded-tl-none shadow-sm border border-gray-100'
@@ -127,17 +127,25 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ dataContext, last7Days
                     </div>
                     
                     {msg.role === 'ai' && msg.text.includes('[SHOW_SALES_CHART]') && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded-lg h-[120px]">
+                      <div className="mt-3 p-3 bg-gray-50 rounded-xl h-[200px] border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Sales Trend (Last 7 Days)</p>
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={last7Days}>
-                            <Area type="monotone" dataKey="sales" stroke="#FF3269" fill="#FF3269" fillOpacity={0.1} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <XAxis dataKey="name" fontSize={8} tickLine={false} axisLine={false} />
+                            <YAxis fontSize={8} tickLine={false} axisLine={false} />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: 'bold' }}
+                            />
+                            <Area type="monotone" dataKey="sales" stroke="#FF3269" strokeWidth={2} fill="#FF3269" fillOpacity={0.1} />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
                     )}
 
                     {msg.role === 'ai' && msg.text.includes('[SHOW_INVENTORY_CHART]') && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded-lg h-[120px]">
+                      <div className="mt-3 p-3 bg-gray-50 rounded-xl h-[200px] border border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Inventory Distribution</p>
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
@@ -148,8 +156,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ dataContext, last7Days
                               ]}
                               cx="50%"
                               cy="50%"
-                              innerRadius={30}
-                              outerRadius={45}
+                              innerRadius={40}
+                              outerRadius={60}
                               paddingAngle={5}
                               dataKey="value"
                             >
@@ -157,9 +165,25 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ dataContext, last7Days
                               <Cell fill="#FFBB28" />
                               <Cell fill="#FF3269" />
                             </Pie>
-                            <Tooltip />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: 'bold' }}
+                            />
                           </PieChart>
                         </ResponsiveContainer>
+                        <div className="flex justify-center gap-3 mt-1">
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-[#00C49F]" />
+                            <span className="text-[8px] font-bold text-gray-500">Normal</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-[#FFBB28]" />
+                            <span className="text-[8px] font-bold text-gray-500">Low</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-[#FF3269]" />
+                            <span className="text-[8px] font-bold text-gray-500">Damaged</span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

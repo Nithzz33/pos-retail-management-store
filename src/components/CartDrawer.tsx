@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { db, auth, handleFirestoreError, OperationType } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, doc, increment } from 'firebase/firestore';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -44,7 +44,50 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
       const orderData = await response.json();
 
-      // 2. Open Razorpay Modal
+      // 3. Handle success
+      const handler = async (response: any) => {
+        try {
+          const batch = writeBatch(db);
+          
+          // Update stock for each product
+          for (const item of cartItems) {
+            if (item.product) {
+              const productRef = doc(db, 'products', item.productId);
+              batch.update(productRef, {
+                stock: increment(-item.quantity)
+              });
+            }
+          }
+
+          // Save order to Firestore
+          await addDoc(collection(db, 'orders'), {
+            userId: auth.currentUser?.uid,
+            items: cartItems.map(item => ({
+              productId: item.productId,
+              name: item.product?.name || 'Unknown Product',
+              price: item.product?.discountPrice || item.product?.price || 0,
+              quantity: item.quantity
+            })),
+            totalAmount,
+            status: 'placed',
+            paymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            deliveryAddress: 'Default Address (Mock)', // In a real app, collect this
+            createdAt: serverTimestamp(),
+          });
+
+          await batch.commit();
+
+          toast.success('Order placed successfully!');
+          await clearCart();
+          onClose();
+          navigate('/order-history');
+        } catch (error) {
+          handleFirestoreError(error, OperationType.CREATE, 'orders');
+          toast.error('Payment successful but failed to save order. Please contact support.');
+        }
+      };
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SOQbAh2VaZaTAd",
         amount: orderData.amount,
@@ -52,35 +95,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
         name: "Retail Management Store",
         description: "Order Payment",
         order_id: orderData.id,
-        handler: async (response: any) => {
-          // 3. Handle success
-          try {
-            // Save order to Firestore
-            await addDoc(collection(db, 'orders'), {
-              userId: auth.currentUser?.uid,
-              items: cartItems.map(item => ({
-                productId: item.productId,
-                name: item.product?.name || 'Unknown Product',
-                price: item.product?.discountPrice || item.product?.price || 0,
-                quantity: item.quantity
-              })),
-              totalAmount,
-              status: 'placed',
-              paymentId: response.razorpay_payment_id,
-              razorpayOrderId: response.razorpay_order_id,
-              deliveryAddress: 'Default Address (Mock)', // In a real app, collect this
-              createdAt: serverTimestamp(),
-            });
-
-            toast.success('Order placed successfully!');
-            await clearCart();
-            onClose();
-            navigate('/order-history');
-          } catch (error) {
-            handleFirestoreError(error, OperationType.CREATE, 'orders');
-            toast.error('Payment successful but failed to save order. Please contact support.');
-          }
-        },
+        handler,
         prefill: {
           name: auth.currentUser.displayName || '',
           email: auth.currentUser.email || '',

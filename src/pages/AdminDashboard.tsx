@@ -11,7 +11,7 @@ import {
   Loader2, AlertTriangle, CheckCircle, 
   Clock, Truck, XCircle, ArrowUpRight, ArrowDownRight, RefreshCw,
   Scan, ShoppingCart, CreditCard, Banknote, Plus, Minus, Trash2, Sparkles,
-  Edit, Save, X, Upload, FileText, ChevronLeft, ChevronRight
+  Edit, Save, X, Upload, FileText, ChevronLeft, ChevronRight, Check, Square, Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -22,6 +22,8 @@ import { StorePOS } from '../components/StorePOS';
 import { AIAssistant } from '../components/AIAssistant';
 import Papa from 'papaparse';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
+import { seedDatabase, clearAllProducts } from '../seed';
+import { printInvoice } from '../utils/printInvoice';
 
 const ADMIN_EMAIL = "sainithingowda3714@gmail.com";
 
@@ -31,7 +33,7 @@ export const AdminDashboard: React.FC = () => {
   const [storeSales, setStoreSales] = useState<Sale[]>([]);
   const [procurements, setProcurements] = useState<Procurement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'inventory' | 'procurement' | 'pos'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'inventory' | 'procurement' | 'pos' | 'sales'>('overview');
   const isAdmin = auth.currentUser?.email === ADMIN_EMAIL;
   
   // POS State
@@ -96,6 +98,85 @@ export const AdminDashboard: React.FC = () => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productForm, setProductForm] = useState<Partial<Product>>({});
 
+  // Bulk Stock State
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkStockValue, setBulkStockValue] = useState<number>(0);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+
+  const handleClearAllProducts = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL products? This action cannot be undone.')) {
+      return;
+    }
+    setIsClearing(true);
+    try {
+      const count = await clearAllProducts();
+      toast.success(`Successfully deleted ${count} products!`);
+    } catch (error: any) {
+      console.error('Clear Error:', error);
+      toast.error('Failed to clear products. Check console for details.');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    console.log('Reset Database triggered');
+    if (!window.confirm('Are you sure you want to reset the database? This will delete all current products and seed new ones.')) {
+      console.log('Reset Database cancelled by user');
+      return;
+    }
+    setIsSeeding(true);
+    try {
+      console.log('Calling seedDatabase...');
+      await seedDatabase();
+      console.log('seedDatabase completed successfully');
+      toast.success('Database reset and seeded successfully!');
+    } catch (error: any) {
+      console.error('Seeding Error:', error);
+      let errorMessage = 'Failed to reset database.';
+      try {
+        // Try to parse the JSON error from handleFirestoreError
+        const errInfo = JSON.parse(error.message);
+        errorMessage = `Seeding failed: ${errInfo.error}`;
+        if (errInfo.error.includes('permission-denied')) {
+          errorMessage = "Permission denied. Please ensure you are logged in as an admin and your email is verified.";
+        }
+      } catch (e) {
+        errorMessage = error.message || 'An unknown error occurred during seeding.';
+      }
+      toast.error(errorMessage, {
+        description: 'Check the browser console for more technical details.',
+        duration: 8000
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleBulkStockUpdate = async () => {
+    if (selectedProducts.length === 0) return;
+    setIsBulkUpdating(true);
+    try {
+      const batch = writeBatch(db);
+      selectedProducts.forEach(productId => {
+        const productRef = doc(db, 'products', productId);
+        batch.update(productRef, { stock: bulkStockValue });
+      });
+      await batch.commit();
+      toast.success(`Successfully updated stock for ${selectedProducts.length} products`);
+      setSelectedProducts([]);
+      setIsBulkModalOpen(false);
+    } catch (error) {
+      console.error('Bulk Update Error:', error);
+      toast.error('Failed to update stock in bulk');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   useEffect(() => {
     if (!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) {
       window.location.href = '/';
@@ -122,6 +203,20 @@ export const AdminDashboard: React.FC = () => {
       const procurementsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Procurement[];
       setProcurements(procurementsData);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'procurements'));
+
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      console.log('User email not verified:', auth.currentUser.email);
+      toast.error('Your email is not verified. Some administrative actions may be restricted.', {
+        description: 'Please verify your email to ensure full access.',
+        duration: 10000,
+      });
+    }
+
+    console.log('Admin Status:', {
+      currentUser: auth.currentUser?.email,
+      isAdmin: auth.currentUser?.email === ADMIN_EMAIL,
+      emailVerified: auth.currentUser?.emailVerified
+    });
 
     return () => {
       unsubOrders();
@@ -411,6 +506,12 @@ export const AdminDashboard: React.FC = () => {
             <ShoppingCart size={20} /> Store POS
           </button>
           <button 
+            onClick={() => setActiveTab('sales')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'sales' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <Banknote size={20} /> Store Sales
+          </button>
+          <button 
             onClick={() => setActiveTab('procurement')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'procurement' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-gray-50'}`}
           >
@@ -449,6 +550,14 @@ export const AdminDashboard: React.FC = () => {
             <p className="text-gray-500 font-medium">Welcome back, Admin. Here's what's happening today.</p>
           </div>
           <div className="flex items-center gap-4">
+            <button 
+              onClick={handleResetDatabase}
+              disabled={isSeeding}
+              className="bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all disabled:opacity-50"
+            >
+              {isSeeding ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+              Reset Database
+            </button>
             <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2 px-4">
               <Clock size={18} className="text-gray-400" />
               <span className="font-bold text-gray-700">{format(now, 'PPP')}</span>
@@ -566,6 +675,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Date</th>
                     <th className="px-6 py-4">Action</th>
+                    <th className="px-6 py-4">Invoice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -604,6 +714,15 @@ export const AdminDashboard: React.FC = () => {
                           <option value="cancelled">Cancelled</option>
                         </select>
                       </td>
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={() => printInvoice(order)}
+                          className="p-2 text-gray-400 hover:text-[#FF3269] hover:bg-[#FF3269]/5 rounded-lg transition-colors"
+                          title="Print Invoice"
+                        >
+                          <Printer size={18} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -638,6 +757,22 @@ export const AdminDashboard: React.FC = () => {
                   {isImporting ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
                   Bulk Import
                 </button>
+                {selectedProducts.length > 0 && (
+                  <button 
+                    onClick={() => setIsBulkModalOpen(true)}
+                    className="bg-orange-500 text-white px-4 py-2.5 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20"
+                  >
+                    <RefreshCw size={18} /> Bulk Stock Update ({selectedProducts.length})
+                  </button>
+                )}
+                <button 
+                  onClick={handleClearAllProducts}
+                  disabled={isClearing}
+                  className="bg-white text-red-600 border border-red-200 px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-red-50 transition-all disabled:opacity-50"
+                >
+                  {isClearing ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                  Clear All
+                </button>
                 <button 
                   onClick={() => {
                     setEditingProduct(null);
@@ -653,7 +788,23 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
-                <div key={product.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex gap-4 group hover:shadow-xl transition-all">
+                <div key={product.id} className={`bg-white p-6 rounded-3xl shadow-sm border ${selectedProducts.includes(product.id) ? 'border-[#FF3269] ring-2 ring-[#FF3269]/10' : 'border-gray-100'} flex gap-4 group hover:shadow-xl transition-all relative`}>
+                  <button 
+                    onClick={() => {
+                      if (selectedProducts.includes(product.id)) {
+                        setSelectedProducts(prev => prev.filter(id => id !== product.id));
+                      } else {
+                        setSelectedProducts(prev => [...prev, product.id]);
+                      }
+                    }}
+                    className={`absolute top-4 left-4 z-10 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                      selectedProducts.includes(product.id) 
+                        ? 'bg-[#FF3269] border-[#FF3269] text-white' 
+                        : 'bg-white border-gray-200 text-transparent group-hover:border-gray-300'
+                    }`}
+                  >
+                    <Check size={14} strokeWidth={4} />
+                  </button>
                   <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border border-gray-100">
                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
                   </div>
@@ -721,6 +872,78 @@ export const AdminDashboard: React.FC = () => {
               onScan={() => { setScanType('pos'); setIsScanning(true); }} 
               externalBarcode={scannedBarcode}
             />
+          </div>
+        )}
+
+        {activeTab === 'sales' && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-xl font-black text-gray-900">Store Sales History</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 text-gray-400 text-xs font-black uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-4">Sale ID</th>
+                    <th className="px-6 py-4">Customer</th>
+                    <th className="px-6 py-4">Items</th>
+                    <th className="px-6 py-4">Subtotal</th>
+                    <th className="px-6 py-4">Discount</th>
+                    <th className="px-6 py-4">Total</th>
+                    <th className="px-6 py-4">Method</th>
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {storeSales.map((sale) => (
+                    <tr key={sale.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-gray-900">#{sale.id.slice(-6).toUpperCase()}</td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-gray-800">{sale.customerName || 'Walk-in'}</p>
+                        <p className="text-xs text-gray-400 font-medium">{sale.customerPhone || 'No Phone'}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-gray-800">{sale.items.length} items</p>
+                        <p className="text-[10px] text-gray-400 truncate max-w-[150px]">
+                          {sale.items.map(i => `${i.name} x${i.quantity}`).join(', ')}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-600">₹{sale.subtotal?.toFixed(2) || sale.totalAmount}</td>
+                      <td className="px-6 py-4 font-bold text-red-500">-₹{sale.discount?.toFixed(2) || 0}</td>
+                      <td className="px-6 py-4 font-black text-gray-900">₹{sale.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          sale.paymentMethod === 'online' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                        }`}>
+                          {sale.paymentMethod}
+                          {sale.paymentId && <span className="block text-[8px] opacity-50">ID: {sale.paymentId.slice(-8)}</span>}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold text-gray-500">
+                        {sale.createdAt?.toDate ? format(sale.createdAt.toDate(), 'MMM d, HH:mm') : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={() => printInvoice(sale)}
+                          className="p-2 text-gray-400 hover:text-[#FF3269] hover:bg-[#FF3269]/5 rounded-lg transition-colors"
+                          title="Print Invoice"
+                        >
+                          <Printer size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {storeSales.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-gray-400 font-bold">
+                        No store sales recorded yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -892,6 +1115,64 @@ export const AdminDashboard: React.FC = () => {
         )}
 
       </main>
+
+      {/* Bulk Stock Update Modal */}
+      <AnimatePresence>
+        {isBulkModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 bg-orange-500 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <RefreshCw size={24} />
+                  </div>
+                  <button onClick={() => setIsBulkModalOpen(false)} className="hover:bg-white/20 p-2 rounded-xl transition-all">
+                    <X size={24} />
+                  </button>
+                </div>
+                <h3 className="text-2xl font-black">Bulk Stock Update</h3>
+                <p className="text-orange-100 font-bold">Updating {selectedProducts.length} selected products</p>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase ml-1">New Stock Level</label>
+                  <input 
+                    type="number" 
+                    value={bulkStockValue}
+                    onChange={(e) => setBulkStockValue(parseInt(e.target.value))}
+                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-orange-500 outline-none font-black text-2xl text-gray-700"
+                    placeholder="0"
+                  />
+                  <p className="text-[10px] font-bold text-gray-400 ml-1">This will overwrite the current stock for all selected products.</p>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => setIsBulkModalOpen(false)}
+                    className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-black hover:bg-gray-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleBulkStockUpdate}
+                    disabled={isBulkUpdating}
+                    className="flex-1 bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isBulkUpdating ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    Update All
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Product Edit Modal */}
       <AnimatePresence>
@@ -1138,7 +1419,13 @@ export const AdminDashboard: React.FC = () => {
             lowStockProducts: products.filter(p => p.stock < 10).map(p => ({ name: p.name, stock: p.stock })),
             damagedProducts: products.filter(p => (p.damagedCount || 0) > 0).map(p => ({ name: p.name, damaged: p.damagedCount })),
             recentOrders: orders.slice(0, 5).map(o => ({ id: o.id, amount: o.totalAmount, status: o.status })),
-            recentStoreSales: storeSales.slice(0, 5).map(s => ({ id: s.id, amount: s.totalAmount, method: s.paymentMethod }))
+            recentStoreSales: storeSales.slice(0, 5).map(s => ({ 
+              id: s.id, 
+              amount: s.totalAmount, 
+              method: s.paymentMethod,
+              customer: s.customerName || 'Walk-in',
+              discount: s.discount || 0
+            }))
           }}
           last7Days={last7Days}
           products={products}

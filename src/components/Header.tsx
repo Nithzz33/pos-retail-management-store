@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, MapPin, ChevronDown, History, LayoutDashboard, Grid } from 'lucide-react';
+import { Search, ShoppingCart, User, MapPin, ChevronDown, History, LayoutDashboard, Grid, ShoppingBag } from 'lucide-react';
 import { loginWithGoogle, logout, auth, db } from '../firebase';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { useCart } from '../context/CartContext';
@@ -136,8 +136,18 @@ export const Header: React.FC = () => {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <History size={18} />
-                          Orders
+                          Online Orders
                         </Link>
+                        {isAdmin && (
+                          <Link 
+                            to="/pos-history" 
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FF3269] transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <ShoppingBag size={18} />
+                            POS History
+                          </Link>
+                        )}
                         {isAdmin && (
                           <Link 
                             to="/admin" 

@@ -205,7 +205,11 @@ export const ProductDetails: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-6 py-6 border-y border-gray-100">
-              {cartItem ? (
+              {product.stock <= 0 ? (
+                <div className="flex-1 bg-red-50 text-red-600 px-8 py-4 rounded-2xl font-black text-xl text-center border-2 border-red-100">
+                  Out of Stock
+                </div>
+              ) : cartItem ? (
                 <div className="flex items-center bg-[#FF3269] text-white rounded-2xl px-6 py-4 gap-8 shadow-lg shadow-[#FF3269]/20">
                   <button 
                     onClick={() => cartItem.quantity === 1 ? removeFromCart(cartItem.id) : updateQuantity(cartItem.id, cartItem.quantity - 1)}
@@ -216,7 +220,8 @@ export const ProductDetails: React.FC = () => {
                   <span className="font-black text-2xl min-w-[30px] text-center">{cartItem.quantity}</span>
                   <button 
                     onClick={() => updateQuantity(cartItem.id, cartItem.quantity + 1)}
-                    className="hover:scale-125 transition-transform"
+                    disabled={cartItem.quantity >= product.stock}
+                    className="hover:scale-125 transition-transform disabled:opacity-50"
                   >
                     <Plus size={24} />
                   </button>
@@ -229,6 +234,13 @@ export const ProductDetails: React.FC = () => {
                   <ShoppingCart size={24} /> Add to Cart
                 </button>
               )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`w-3 h-3 rounded-full ${product.stock > 10 ? 'bg-green-500' : product.stock > 0 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+              <span className="text-sm font-bold text-gray-600">
+                {product.stock > 0 ? `${product.stock} items available in stock` : 'Currently unavailable'}
+              </span>
             </div>
 
             <div className="grid grid-cols-3 gap-4">

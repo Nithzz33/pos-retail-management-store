@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { ProductDetails } from './pages/ProductDetails';
 import { CategoryProducts } from './pages/CategoryProducts';
 import { OrderHistory } from './pages/OrderHistory';
+import { POSHistory } from './pages/POSHistory';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { CartProvider } from './context/CartContext';
 import { Toaster } from 'sonner';
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/category/:categoryId" element={<CategoryProducts />} />
             <Route path="/order-history" element={<OrderHistory />} />
+            <Route path="/pos-history" element={<POSHistory />} />
             <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
           <Toaster position="bottom-right" richColors />
