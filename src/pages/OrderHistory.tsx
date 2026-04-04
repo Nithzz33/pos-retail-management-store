@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db, auth, handleFirestoreError, OperationType } from '../firebase';
+import { db, auth, handleFirestoreError, OperationType, onAuthStateChanged } from '../firebase';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Order, Product } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -49,17 +49,37 @@ const TrackingProgress: React.FC<{ currentStatus: string }> = ({ currentStatus }
           const isActive = index === currentIndex;
 
           return (
-            <div key={status.id} className="flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
+            <div key={status.id} className="flex flex-col items-center gap-2 relative">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 relative z-10 ${
                 isCompleted ? 'bg-[#FF3269] border-[#FF3269] text-white' : 'bg-white border-gray-100 text-gray-300'
-              } ${isActive ? 'ring-4 ring-[#FF3269]/20 scale-110' : ''}`}>
+              } ${isActive ? 'ring-4 ring-[#FF3269]/20 scale-110 shadow-lg shadow-[#FF3269]/20' : ''}`}>
                 {isCompleted && !isActive ? <CheckCircle2 size={20} /> : <Icon size={20} />}
+                
+                {isActive && (
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0.5 }}
+                    animate={{ scale: 1.5, opacity: 0 }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
+                    className="absolute inset-0 bg-[#FF3269] rounded-full -z-10"
+                  />
+                )}
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider text-center max-w-[60px] ${
-                isCompleted ? 'text-gray-800' : 'text-gray-400'
-              }`}>
-                {status.label}
-              </span>
+              <div className="flex flex-col items-center">
+                <span className={`text-[10px] font-black uppercase tracking-wider text-center max-w-[60px] leading-tight ${
+                  isCompleted ? 'text-gray-800' : 'text-gray-400'
+                }`}>
+                  {status.label}
+                </span>
+                {isActive && (
+                  <motion.span 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-[8px] font-black text-[#FF3269] uppercase tracking-tighter mt-0.5"
+                  >
+                    Live
+                  </motion.span>
+                )}
+              </div>
             </div>
           );
         })}
@@ -74,6 +94,14 @@ export const OrderHistory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [user, setUser] = useState(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleCancelOrder = async (orderId: string) => {
     if (!window.confirm('Are you sure you want to cancel this order?')) return;
@@ -101,14 +129,14 @@ export const OrderHistory: React.FC = () => {
       setProducts(prods);
     });
 
-    if (!auth.currentUser) {
+    if (!user) {
       setLoading(false);
       return () => unsubscribeProducts();
     }
 
     const q = query(
       collection(db, 'orders'),
-      where('userId', '==', auth.currentUser.uid),
+      where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
 
@@ -128,7 +156,7 @@ export const OrderHistory: React.FC = () => {
       unsubscribeProducts();
       unsubscribeOrders();
     };
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -139,10 +167,10 @@ export const OrderHistory: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-transparent py-12">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="bg-[#FF3269]/10 p-3 rounded-2xl text-[#FF3269]">
+        <div className="flex items-center gap-4 mb-8 bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-sm">
+          <div className="bg-[#FF3269]/10 p-3 rounded-2xl text-[#FF3269] backdrop-blur-sm">
             <Package size={32} />
           </div>
           <div>
@@ -155,16 +183,16 @@ export const OrderHistory: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100"
+            className="bg-white/40 backdrop-blur-md rounded-3xl p-12 text-center border border-white/20 shadow-sm"
           >
-            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-24 h-24 bg-white/40 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <Package size={48} className="text-gray-300" />
             </div>
             <h2 className="text-2xl font-black text-gray-800 mb-2">No orders yet</h2>
             <p className="text-gray-500 font-medium mb-8">Looks like you haven't placed any orders yet. Start shopping to see your history!</p>
             <a 
               href="/"
-              className="inline-block bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all"
+              className="inline-block bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20"
             >
               Start Shopping
             </a>
@@ -176,11 +204,11 @@ export const OrderHistory: React.FC = () => {
                 key={order.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow overflow-hidden"
+                className="bg-white/40 backdrop-blur-md rounded-3xl p-6 border border-white/20 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
               >
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-gray-50">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
                   <div className="flex items-center gap-4">
-                    <div className="bg-gray-50 p-3 rounded-xl">
+                    <div className="bg-white/40 p-3 rounded-xl backdrop-blur-sm">
                       <Package size={24} className="text-gray-400" />
                     </div>
                     <div>
@@ -201,10 +229,10 @@ export const OrderHistory: React.FC = () => {
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total</p>
                       <p className="font-black text-[#FF3269] text-lg">₹{order.totalAmount}</p>
                     </div>
-                    <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-colors duration-500 ${
-                      order.status === 'delivered' ? 'bg-green-100 text-green-600' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-600' :
-                      'bg-blue-100 text-blue-600'
+                    <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-colors duration-500 backdrop-blur-sm ${
+                      order.status === 'delivered' ? 'bg-green-100/50 text-green-600' :
+                      order.status === 'cancelled' ? 'bg-red-100/50 text-red-600' :
+                      'bg-blue-100/50 text-blue-600'
                     }`}>
                       {order.status.replace('_', ' ')}
                     </div>
@@ -226,23 +254,54 @@ export const OrderHistory: React.FC = () => {
                         className="overflow-hidden"
                       >
                         <div className="pt-4 border-t border-gray-50">
-                          <h4 className="text-sm font-black text-gray-800 mb-4">Live Tracking</h4>
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-black text-gray-800">Live Tracking</h4>
+                            <div className="flex items-center gap-2">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                              </span>
+                              <span className="text-[10px] font-black text-green-500 uppercase tracking-wider">Live Updates</span>
+                            </div>
+                          </div>
+                          
                           <TrackingProgress currentStatus={order.status} />
                           
+                          {/* Status Description Card */}
+                          <div className="mt-4 p-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white/40 rounded-xl flex items-center justify-center text-[#FF3269] shadow-sm backdrop-blur-sm">
+                              {ORDER_STATUSES.find(s => s.id === order.status)?.icon({ size: 24 }) || <Package size={24} />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-gray-800">
+                                {ORDER_STATUSES.find(s => s.id === order.status)?.label || 'Order Update'}
+                              </p>
+                              <p className="text-xs font-medium text-gray-500">
+                                {order.status === 'placed' ? 'Your order has been successfully placed and is awaiting confirmation.' :
+                                 order.status === 'pending' ? 'Store is reviewing your order details.' :
+                                 order.status === 'processing' ? 'Your items are being carefully picked and packed.' :
+                                 order.status === 'shipped' ? 'Your order has left the store and is on its way.' :
+                                 order.status === 'out_for_delivery' ? 'Our delivery partner is nearby and will arrive shortly.' :
+                                 order.status === 'delivered' ? 'Order delivered! Enjoy your fresh groceries.' :
+                                 'Order status updated.'}
+                              </p>
+                            </div>
+                          </div>
+                          
                           {/* Simulated Map */}
-                          <div className="mt-6 relative h-48 bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
+                          <div className="mt-6 relative h-56 bg-white/20 backdrop-blur-md rounded-3xl overflow-hidden border border-white/20">
                             <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="relative w-full h-full">
                                 {/* Path Line */}
                                 <svg className="absolute inset-0 w-full h-full">
                                   <path 
-                                    d="M 50 150 Q 150 50 350 100" 
+                                    d="M 50 180 Q 150 50 350 120" 
                                     fill="none" 
                                     stroke="#FF3269" 
                                     strokeWidth="4" 
                                     strokeDasharray="8 8" 
-                                    className="opacity-30"
+                                    className="opacity-20"
                                   />
                                 </svg>
                                 
@@ -250,33 +309,48 @@ export const OrderHistory: React.FC = () => {
                                 {order.status !== 'delivered' && order.status !== 'cancelled' && (
                                   <motion.div 
                                     animate={{ 
-                                      x: order.status === 'shipped' ? 150 : 250,
-                                      y: order.status === 'shipped' ? 50 : 75
+                                      x: order.status === 'placed' || order.status === 'pending' ? 50 :
+                                         order.status === 'processing' ? 100 :
+                                         order.status === 'shipped' ? 200 :
+                                         order.status === 'out_for_delivery' ? 300 : 350,
+                                      y: order.status === 'placed' || order.status === 'pending' ? 180 :
+                                         order.status === 'processing' ? 120 :
+                                         order.status === 'shipped' ? 60 :
+                                         order.status === 'out_for_delivery' ? 90 : 120
                                     }}
-                                    className="absolute p-2 bg-[#FF3269] text-white rounded-full shadow-xl z-10"
+                                    transition={{ type: "spring", stiffness: 50, damping: 15 }}
+                                    className="absolute p-2 bg-[#FF3269] text-white rounded-full shadow-2xl z-20"
                                   >
-                                    <Truck size={20} />
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+                                    <Truck size={24} />
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                                   </motion.div>
                                 )}
-
+ 
                                 {/* Destination Icon */}
-                                <div className="absolute right-10 top-20 p-2 bg-gray-800 text-white rounded-full shadow-xl">
-                                  <Home size={20} />
+                                <div className="absolute right-10 top-24 p-3 bg-gray-900 text-white rounded-full shadow-2xl z-10">
+                                  <Home size={24} />
                                 </div>
                               </div>
                             </div>
-                            <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-xl border border-white/50 shadow-lg flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
+                            
+                            {/* Delivery Partner Details Overlay */}
+                            <div className="absolute bottom-4 left-4 right-4 bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-xl flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/40 rounded-full overflow-hidden border-2 border-white shadow-sm backdrop-blur-sm">
                                   <img src="https://picsum.photos/seed/delivery/100/100" alt="Delivery Partner" referrerPolicy="no-referrer" />
                                 </div>
                                 <div>
-                                  <p className="text-xs font-black text-gray-800">Rahul Sharma</p>
-                                  <p className="text-[10px] font-bold text-gray-500">Your delivery partner</p>
+                                  <p className="text-sm font-black text-gray-800">Rahul Sharma</p>
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] font-bold text-gray-500">Delivery Partner • </span>
+                                    <span className="text-[10px] font-black text-green-500">4.9 ★</span>
+                                  </div>
                                 </div>
                               </div>
-                              <button className="bg-[#FF3269] text-white px-4 py-2 rounded-lg text-xs font-black">Call</button>
+                              <div className="flex gap-2">
+                                <button className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl text-xs font-black hover:bg-gray-200 transition-colors">Message</button>
+                                <button className="bg-[#FF3269] text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-[#E62D5E] transition-colors">Call</button>
+                              </div>
                             </div>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
 import { db, handleFirestoreError, OperationType } from './firebase';
-import { collection, addDoc, getDocs, query, limit, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, limit, deleteDoc, doc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { geohashForLocation } from 'geofire-common';
 
 const categories = [
   { name: "Fruits & Vegetables", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/06020c64-071c-438e-8913-64998811d333.png", order: 1 },
@@ -174,6 +175,73 @@ export async function seedDatabase() {
     }
     
     console.log(`Database cleanup and seeding complete! Total products seeded: ${totalAdded}`);
+    
+    // 4. Seed Mock Riders
+    console.log("Seeding mock riders...");
+    const ridersSnap = await getDocs(collection(db, 'riders'));
+    if (ridersSnap.empty) {
+      const riderBatch = writeBatch(db);
+      const mockRiders = [
+        { name: "Rahul Sharma", lat: 12.9716, lng: 77.5946, rating: 4.8, acceptanceRate: 0.95, status: 'online' },
+        { name: "Amit Patel", lat: 12.9352, lng: 77.6245, rating: 4.5, acceptanceRate: 0.88, status: 'online' },
+        { name: "Suresh Kumar", lat: 12.9279, lng: 77.6271, rating: 4.2, acceptanceRate: 0.75, status: 'busy' },
+        { name: "Priya Singh", lat: 12.9562, lng: 77.7011, rating: 4.9, acceptanceRate: 0.98, status: 'online' },
+        { name: "Deepak Verma", lat: 13.0285, lng: 77.5896, rating: 4.6, acceptanceRate: 0.92, status: 'offline' },
+        { name: "Vikram Rao", lat: 12.9784, lng: 77.6408, rating: 4.7, acceptanceRate: 0.90, status: 'busy' }
+      ];
+
+      for (const rider of mockRiders) {
+        const riderRef = doc(collection(db, 'riders'));
+        riderBatch.set(riderRef, {
+          name: rider.name,
+          location: { lat: rider.lat, lng: rider.lng },
+          geohash: geohashForLocation([rider.lat, rider.lng]),
+          rating: rider.rating,
+          acceptanceRate: rider.acceptanceRate,
+          status: rider.status,
+          lastUpdated: serverTimestamp()
+        });
+      }
+      await riderBatch.commit();
+      console.log("Mock riders seeded.");
+    }
+
+    // 5. Seed Mock Orders for Matching Demo
+    console.log("Seeding mock orders for matching...");
+    const ordersSnap = await getDocs(query(collection(db, 'orders'), limit(1)));
+    if (ordersSnap.empty) {
+      const orderBatch = writeBatch(db);
+      const mockOrders = [
+        { 
+          userId: "demo-user-1", 
+          items: [{ productId: "p1", name: "Fresh Apples", price: 120, quantity: 2 }],
+          totalAmount: 240,
+          status: "pending",
+          deliveryAddress: "Indiranagar, Bangalore",
+          pickupLocation: { lat: 12.9784, lng: 77.6408 },
+          deliveryLocation: { lat: 12.9716, lng: 77.6412 },
+          createdAt: serverTimestamp()
+        },
+        { 
+          userId: "demo-user-2", 
+          items: [{ productId: "p2", name: "Organic Milk", price: 60, quantity: 3 }],
+          totalAmount: 180,
+          status: "pending",
+          deliveryAddress: "Koramangala, Bangalore",
+          pickupLocation: { lat: 12.9352, lng: 77.6245 },
+          deliveryLocation: { lat: 12.9279, lng: 77.6271 },
+          createdAt: serverTimestamp()
+        }
+      ];
+
+      for (const order of mockOrders) {
+        const orderRef = doc(collection(db, 'orders'));
+        orderBatch.set(orderRef, order);
+      }
+      await orderBatch.commit();
+      console.log("Mock orders seeded.");
+    }
+
   } catch (error) {
     console.error("Critical error in seedDatabase:", error);
     handleFirestoreError(error, OperationType.WRITE, 'seedDatabase');

@@ -7,16 +7,18 @@ import { CategoryBar } from '../components/CategoryBar';
 import { CategoryNav } from '../components/CategoryNav';
 import { FilterBar } from '../components/FilterBar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, ShoppingCart, Globe, Scan } from 'lucide-react';
+import { Filter, ShoppingCart, Globe, Scan, History } from 'lucide-react';
 import { seedDatabase } from '../seed';
 import { StorePOS } from '../components/StorePOS';
 import { BarcodeScanner } from '../components/BarcodeScanner';
 import { AIAssistant } from '../components/AIAssistant';
+import { getRecentlyViewed } from '../utils/recentlyViewed';
 
 const ADMIN_EMAIL = "sainithingowda3714@gmail.com";
 
 export const Home: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'online' | 'pos'>('online');
   const [isScanning, setIsScanning] = useState(false);
@@ -27,19 +29,29 @@ export const Home: React.FC = () => {
   // Filter States
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [isPopularOnly, setIsPopularOnly] = useState(false);
-  const [sort, setSort] = useState<'price-asc' | 'price-desc' | 'none'>('none');
+  const [sort, setSort] = useState<'newest' | 'price-low' | 'price-high' | 'popularity'>('newest');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, 'products'));
-    return onSnapshot(q, (snapshot) => {
+    const unsub = onSnapshot(q, (snapshot) => {
       const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
       setAllProducts(prods);
       setLoading(false);
     });
+
+    setRecentlyViewed(getRecentlyViewed());
+
+    return unsub;
   }, []);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
+
+    // Category Filter
+    if (selectedCategories.length > 0) {
+      result = result.filter(p => selectedCategories.includes(p.categoryId));
+    }
 
     // Price Filter
     if (priceRange) {
@@ -55,29 +67,44 @@ export const Home: React.FC = () => {
     }
 
     // Sort
-    if (sort === 'price-asc') {
-      result.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
-    } else if (sort === 'price-desc') {
-      result.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
-    }
+    result.sort((a, b) => {
+      const priceA = a.discountPrice || a.price;
+      const priceB = b.discountPrice || b.price;
+
+      switch (sort) {
+        case 'price-low': return priceA - priceB;
+        case 'price-high': return priceB - priceA;
+        case 'popularity': return (b.rating || 0) - (a.rating || 0);
+        case 'newest':
+        default:
+          return (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0);
+      }
+    });
 
     return result;
-  }, [allProducts, priceRange, isPopularOnly, sort]);
+  }, [allProducts, priceRange, isPopularOnly, sort, selectedCategories]);
+
+  const clearFilters = () => {
+    setPriceRange(null);
+    setIsPopularOnly(false);
+    setSort('newest');
+    setSelectedCategories([]);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-app-bg">
       {isAdmin && (
-        <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40">
+        <div className="bg-white/40 backdrop-blur-md border-b border-white/20 sticky top-[88px] z-40">
           <div className="container mx-auto px-4 flex items-center justify-center gap-4 py-2">
             <button 
               onClick={() => setViewMode('online')}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
             >
               <Globe size={18} /> Online Store
             </button>
             <button 
               onClick={() => setViewMode('pos')}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'pos' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'pos' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'text-gray-500 hover:bg-white/40'}`}
             >
               <ShoppingCart size={18} /> Store POS
             </button>
@@ -113,14 +140,17 @@ export const Home: React.FC = () => {
             onPriceChange={setPriceRange}
             onPopularOnlyChange={setIsPopularOnly}
             onSortChange={setSort}
+            onCategoryChange={setSelectedCategories}
             activePriceRange={priceRange}
             isPopularOnly={isPopularOnly}
             activeSort={sort}
+            selectedCategories={selectedCategories}
+            onClearAll={clearFilters}
           />
           
           <main className="container mx-auto px-4 py-8">
             {/* Hero Section */}
-        {!priceRange && !isPopularOnly && sort === 'none' && (
+        {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
@@ -155,24 +185,39 @@ export const Home: React.FC = () => {
         )}
 
         {/* Category Navigation Bar - NEW */}
-        {!priceRange && !isPopularOnly && sort === 'none' && (
+        {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
           <CategoryNav />
+        )}
+
+        {/* Recently Viewed Section */}
+        {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && recentlyViewed.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
+                <History className="text-[#FF3269]" size={20} />
+              </div>
+              <h2 className="text-2xl font-black text-gray-800 tracking-tight">Recently Viewed</h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+              {recentlyViewed.map(product => (
+                <div key={product.id} className="w-[160px] sm:w-[200px] flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Products Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-black text-gray-800">
-              {priceRange || isPopularOnly || sort !== 'none' ? 'Filtered Products' : 'Popular Products'}
+              {priceRange || isPopularOnly || sort !== 'newest' || selectedCategories.length > 0 ? 'Filtered Products' : 'Popular Products'}
               <span className="ml-3 text-sm font-bold text-gray-400">({filteredProducts.length} items)</span>
             </h2>
-            {(priceRange || isPopularOnly || sort !== 'none') && (
+            {(priceRange || isPopularOnly || sort !== 'newest' || selectedCategories.length > 0) && (
               <button 
-                onClick={() => {
-                  setPriceRange(null);
-                  setIsPopularOnly(false);
-                  setSort('none');
-                }}
+                onClick={clearFilters}
                 className="text-[#FF3269] font-bold hover:underline text-sm"
               >
                 Clear All

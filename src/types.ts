@@ -28,6 +28,8 @@ export interface Product {
   isPopular?: boolean;
   barcode?: string;
   images?: string[];
+  rating?: number;
+  createdAt?: any;
 }
 
 export interface Sale {
@@ -89,7 +91,50 @@ export interface Order {
   }[];
   totalAmount: number;
   paymentMethod: 'cash' | 'online';
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'placed' | 'pending' | 'processing' | 'shipped' | 'out_for_delivery' | 'delivered' | 'cancelled';
   createdAt: any;
   deliveryAddress: string;
+  surgeMultiplier: number;
+  surgeAmount: number;
+  pickupLocation?: {
+    lat: number;
+    lng: number;
+  };
+  deliveryLocation?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+export interface Rider {
+  id: string;
+  name: string;
+  status: 'online' | 'busy' | 'offline';
+  location: {
+    lat: number;
+    lng: number;
+  };
+  rating?: number;
+  acceptanceRate?: number;
+  vehicleType?: 'bike' | 'scooter' | 'cycle';
+  lastUpdated?: any;
+}
+
+export interface MatchingResult {
+  riderId: string;
+  score: number;
+  distance: number;
+  eta: number;
+}
+
+export interface AssignmentLog {
+  id: string;
+  orderId: string;
+  riderId: string;
+  riderName: string;
+  assignedAt: any;
+  status: 'assigned' | 'rejected' | 'completed';
+  distance?: number;
+  eta?: number;
+  surgeMultiplier?: number;
 }

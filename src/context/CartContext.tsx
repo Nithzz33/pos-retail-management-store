@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, auth, handleFirestoreError, OperationType } from '../firebase';
+import { db, auth, handleFirestoreError, OperationType, onAuthStateChanged } from '../firebase';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs } from 'firebase/firestore';
 import { CartItem, Product } from '../types';
 
@@ -10,6 +10,9 @@ interface CartContextType {
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   totalAmount: number;
+  surgeMultiplier: number;
+  surgeAmount: number;
+  finalAmount: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -17,6 +20,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Record<string, Product>>({});
+  const [user, setUser] = useState(auth.currentUser);
+  const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
+  const [riderCount, setRiderCount] = useState(0);
+  const [pendingOrderCount, setPendingOrderCount] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Fetch products to map to cart items
@@ -30,12 +44,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    if (!auth.currentUser) {
+    if (!user) {
       setCartItems([]);
       return;
     }
 
-    const cartRef = collection(db, `users/${auth.currentUser.uid}/cart`);
+    const cartRef = collection(db, `users/${user.uid}/cart`);
     return onSnapshot(cartRef, (snapshot) => {
       const items = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -43,13 +57,50 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         product: products[doc.data().productId]
       })) as CartItem[];
       setCartItems(items);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, `users/${auth.currentUser?.uid}/cart`));
-  }, [products, auth.currentUser]);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `users/${user.uid}/cart`));
+  }, [products, user]);
+
+  useEffect(() => {
+    // Fetch online riders and pending orders for surge calculation
+    const unsubRiders = onSnapshot(collection(db, 'riders'), (snapshot) => {
+      const online = snapshot.docs.filter(doc => doc.data().status === 'online').length;
+      setRiderCount(online);
+    });
+
+    const unsubOrders = onSnapshot(query(collection(db, 'orders'), where('status', '==', 'pending')), (snapshot) => {
+      setPendingOrderCount(snapshot.size);
+    });
+
+    return () => {
+      unsubRiders();
+      unsubOrders();
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchSurge = async () => {
+      try {
+        const response = await fetch('/api/surge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demand: pendingOrderCount, supply: riderCount })
+        });
+        const surge = await response.json();
+        setSurgeMultiplier(surge.multiplier);
+      } catch (error) {
+        console.error('Failed to fetch surge:', error);
+      }
+    };
+    
+    if (riderCount >= 0) {
+      fetchSurge();
+    }
+  }, [riderCount, pendingOrderCount]);
 
   const addToCart = async (product: Product) => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     const existingItem = cartItems.find(item => item.productId === product.id);
-    const cartRef = collection(db, `users/${auth.currentUser.uid}/cart`);
+    const cartRef = collection(db, `users/${user.uid}/cart`);
 
     if (product.stock <= 0) {
       throw new Error('Product is out of stock');
@@ -71,21 +122,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}/cart`);
+      handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}/cart`);
     }
   };
 
   const removeFromCart = async (cartItemId: string) => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     try {
-      await deleteDoc(doc(db, `users/${auth.currentUser.uid}/cart`, cartItemId));
+      await deleteDoc(doc(db, `users/${user.uid}/cart`, cartItemId));
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `users/${auth.currentUser.uid}/cart/${cartItemId}`);
+      handleFirestoreError(error, OperationType.DELETE, `users/${user.uid}/cart/${cartItemId}`);
     }
   };
 
   const updateQuantity = async (cartItemId: string, quantity: number) => {
-    if (!auth.currentUser || quantity < 1) return;
+    if (!user || quantity < 1) return;
     
     // Find the item to check stock
     const item = cartItems.find(it => it.id === cartItemId);
@@ -94,21 +145,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      await updateDoc(doc(db, `users/${auth.currentUser.uid}/cart`, cartItemId), { quantity });
+      await updateDoc(doc(db, `users/${user.uid}/cart`, cartItemId), { quantity });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${auth.currentUser.uid}/cart/${cartItemId}`);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}/cart/${cartItemId}`);
     }
   };
 
   const clearCart = async () => {
-    if (!auth.currentUser) return;
+    if (!user) return;
     try {
-      const cartRef = collection(db, `users/${auth.currentUser.uid}/cart`);
+      const cartRef = collection(db, `users/${user.uid}/cart`);
       const snapshot = await getDocs(cartRef);
       const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `users/${auth.currentUser.uid}/cart`);
+      handleFirestoreError(error, OperationType.DELETE, `users/${user.uid}/cart`);
     }
   };
 
@@ -117,8 +168,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return total + (price * item.quantity);
   }, 0);
 
+  const surgeAmount = totalAmount * (surgeMultiplier - 1);
+  const finalAmount = totalAmount + surgeAmount;
+
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, totalAmount }}>
+    <CartContext.Provider value={{ 
+      cartItems, 
+      addToCart, 
+      removeFromCart, 
+      updateQuantity, 
+      clearCart, 
+      totalAmount,
+      surgeMultiplier,
+      surgeAmount,
+      finalAmount
+    }}>
       {children}
     </CartContext.Provider>
   );

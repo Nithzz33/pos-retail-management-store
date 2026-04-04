@@ -12,6 +12,7 @@ export const googleProvider = new GoogleAuthProvider();
 // Auth Helpers
 export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logout = () => signOut(auth);
+export { onAuthStateChanged };
 
 // Error Handling Spec for Firestore Operations
 export enum OperationType {

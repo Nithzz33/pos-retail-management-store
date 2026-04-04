@@ -88,6 +88,14 @@ export const ProductDetails: React.FC = () => {
     fetchRecommendations();
   }, [product]);
 
+  useEffect(() => {
+    if (product) {
+      import('../utils/recentlyViewed').then(({ addToRecentlyViewed }) => {
+        addToRecentlyViewed(product);
+      });
+    }
+  }, [product]);
+
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.currentUser) {
@@ -138,7 +146,7 @@ export const ProductDetails: React.FC = () => {
   const allImages = product ? [product.imageUrl, ...(product.images || [])].filter(Boolean) : [];
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-app-bg pb-20">
       <div className="container mx-auto px-4 py-8">
         <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#FF3269] font-bold mb-8 transition-colors">
           <ChevronLeft size={20} /> Back to Shopping
@@ -244,15 +252,15 @@ export const ProductDetails: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl">
+              <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
                 <Clock className="text-[#FF3269] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">10 Mins Delivery</span>
               </div>
-              <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl">
+              <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
                 <ShieldCheck className="text-[#FF3269] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">Quality Assured</span>
               </div>
-              <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl">
+              <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
                 <Truck className="text-[#FF3269] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">Free Shipping</span>
               </div>
@@ -285,7 +293,7 @@ export const ProductDetails: React.FC = () => {
             <div className="space-y-6">
               <h3 className="text-2xl font-black text-gray-900">Customer Reviews</h3>
               
-              <div className="bg-gray-50 p-8 rounded-3xl space-y-4">
+              <div className="bg-white/40 backdrop-blur-md p-8 rounded-3xl space-y-4 border border-white/20 shadow-sm">
                 <div className="flex items-center gap-4">
                   <span className="text-5xl font-black text-gray-900">{averageRating.toFixed(1)}</span>
                   <div className="flex flex-col">
@@ -318,19 +326,19 @@ export const ProductDetails: React.FC = () => {
                     value={newReview.comment}
                     onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
                     placeholder="Share your thoughts about this product..."
-                    className="w-full bg-gray-50 border-none rounded-2xl p-4 font-medium focus:ring-2 focus:ring-[#FF3269] outline-none min-h-[120px]"
+                    className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-[#FF3269] outline-none min-h-[120px]"
                   />
                   <button
                     type="submit"
                     disabled={isSubmittingReview || !newReview.comment.trim()}
-                    className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:opacity-50"
+                    className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-gray-800 transition-all disabled:opacity-50 shadow-lg shadow-gray-900/10"
                   >
                     {isSubmittingReview ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
                     Post Review
                   </button>
                 </form>
               ) : (
-                <div className="p-6 bg-gray-50 rounded-2xl text-center">
+                <div className="p-6 bg-white/20 backdrop-blur-sm rounded-2xl text-center border border-white/20">
                   <p className="font-bold text-gray-500 mb-2">Login to write a review</p>
                 </div>
               )}
@@ -343,11 +351,11 @@ export const ProductDetails: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     key={review.id} 
-                    className="p-6 bg-white border border-gray-100 rounded-3xl space-y-3"
+                    className="p-6 bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl space-y-3 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center font-black text-[#FF3269]">
+                        <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm border border-white/20 flex items-center justify-center font-black text-[#FF3269]">
                           {review.userName[0].toUpperCase()}
                         </div>
                         <div>

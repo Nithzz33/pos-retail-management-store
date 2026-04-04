@@ -13,7 +13,7 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50 selection:bg-[#FF3269] selection:text-white">
+        <div className="min-h-screen selection:bg-[#FF3269] selection:text-white pt-24">
           <Header />
           <Routes>
             <Route path="/" element={<Home />} />

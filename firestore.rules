@@ -52,6 +52,17 @@ service cloud.firestore {
     //   - createdAt: timestamp (required, immutable)
     //   - deliveryAddress: string (required)
     //
+    // Collection: assignment_logs
+    // Document ID: logId
+    // Fields:
+    //   - orderId: string (required)
+    //   - riderId: string (required)
+    //   - riderName: string (required)
+    //   - assignedAt: timestamp (required)
+    //   - status: string (required, enum: ['assigned', 'rejected', 'completed'])
+    //   - distance: number (optional)
+    //   - eta: number (optional)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -144,6 +155,23 @@ service cloud.firestore {
              data.adminId is string;
     }
 
+    function isValidRider(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.location is map && data.location.lat is number && data.location.lng is number &&
+             data.geohash is string &&
+             data.status in ['online', 'busy', 'offline'];
+    }
+
+    function isValidAssignmentLog(data) {
+      return data.orderId is string &&
+             data.riderId is string &&
+             data.riderName is string &&
+             data.assignedAt is timestamp &&
+             data.status in ['assigned', 'rejected', 'completed'] &&
+             (!('distance' in data) || data.distance is number) &&
+             (!('eta' in data) || data.eta is number);
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
@@ -195,6 +223,17 @@ service cloud.firestore {
     match /procurements/{procurementId} {
       allow read, write: if isAdmin();
       allow create: if isValidProcurement(request.resource.data);
+    }
+
+    match /riders/{riderId} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow create: if isValidRider(request.resource.data);
+    }
+
+    match /assignment_logs/{logId} {
+      allow read, write: if isAdmin();
+      allow create: if isValidAssignmentLog(request.resource.data);
     }
   }
 }

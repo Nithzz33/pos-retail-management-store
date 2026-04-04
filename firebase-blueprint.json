@@ -75,7 +75,14 @@
         "totalAmount": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
         "createdAt": { "type": "string", "format": "date-time" },
-        "deliveryAddress": { "type": "string" }
+        "deliveryAddress": { "type": "string" },
+        "pickupLocation": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        }
       },
       "required": ["userId", "items", "totalAmount", "status", "createdAt", "deliveryAddress"]
     },
@@ -113,6 +120,42 @@
         "adminId": { "type": "string" }
       },
       "required": ["productId", "quantity", "createdAt", "adminId"]
+    },
+    "Rider": {
+      "title": "Rider",
+      "description": "A delivery partner",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "geohash": { "type": "string" },
+        "rating": { "type": "number" },
+        "acceptanceRate": { "type": "number" },
+        "status": { "type": "string", "enum": ["online", "busy", "offline"] },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "location", "geohash", "status"]
+    },
+    "AssignmentLog": {
+      "title": "Assignment Log",
+      "description": "A record of a rider being assigned to an order",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "riderId": { "type": "string" },
+        "riderName": { "type": "string" },
+        "assignedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["assigned", "rejected", "completed"] },
+        "distance": { "type": "number" },
+        "eta": { "type": "number" }
+      },
+      "required": ["orderId", "riderId", "riderName", "assignedAt", "status"]
     }
   },
   "firestore": {
@@ -143,6 +186,14 @@
     "/procurements/{procurementId}": {
       "schema": "Procurement",
       "description": "Inventory procurement records"
+    },
+    "/riders/{riderId}": {
+      "schema": "Rider",
+      "description": "Delivery partners"
+    },
+    "/assignment_logs/{logId}": {
+      "schema": "AssignmentLog",
+      "description": "Rider assignment history"
     }
   }
 }

@@ -1,24 +1,56 @@
-import React from 'react';
-import { Filter, ChevronDown, Star, ArrowUpDown } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { Filter, ChevronDown, Star, ArrowUpDown, Check, X, Tag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { db } from '../firebase';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { Category } from '../types';
 
 interface FilterBarProps {
   onPriceChange: (range: [number, number] | null) => void;
   onPopularOnlyChange: (popularOnly: boolean) => void;
-  onSortChange: (sort: 'price-asc' | 'price-desc' | 'none') => void;
+  onSortChange: (sort: 'newest' | 'price-low' | 'price-high' | 'popularity') => void;
+  onCategoryChange: (categories: string[]) => void;
   activePriceRange: [number, number] | null;
   isPopularOnly: boolean;
-  activeSort: 'price-asc' | 'price-desc' | 'none';
+  activeSort: 'newest' | 'price-low' | 'price-high' | 'popularity';
+  selectedCategories: string[];
+  onClearAll: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   onPriceChange,
   onPopularOnlyChange,
   onSortChange,
+  onCategoryChange,
   activePriceRange,
   isPopularOnly,
-  activeSort
+  activeSort,
+  selectedCategories,
+  onClearAll
 }) => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(query(collection(db, 'categories'), orderBy('order')), (snapshot) => {
+      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Category[];
+      setCategories(cats);
+    });
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      unsub();
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const priceRanges: { label: string; range: [number, number] | null }[] = [
     { label: 'All Prices', range: null },
     { label: 'Under ₹100', range: [0, 100] },
@@ -26,78 +58,186 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     { label: 'Above ₹500', range: [500, 10000] },
   ];
 
+  const toggleCategory = (id: string) => {
+    const newSelection = selectedCategories.includes(id)
+      ? selectedCategories.filter(c => c !== id)
+      : [...selectedCategories, id];
+    onCategoryChange(newSelection);
+  };
+
+  const hasActiveFilters = activePriceRange !== null || isPopularOnly || activeSort !== 'newest' || selectedCategories.length > 0;
+
   return (
-    <div className="bg-white border-b border-gray-100 sticky top-[72px] z-40 shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 text-gray-500 font-bold text-sm mr-2">
-          <Filter size={16} />
-          <span>Filters:</span>
+    <div className="bg-white/60 backdrop-blur-xl border-b border-white/20 sticky top-[88px] z-40 shadow-sm overflow-visible">
+      <div className="container mx-auto px-4 py-3 flex flex-wrap items-center gap-3" ref={dropdownRef}>
+        <div className="flex items-center gap-2 text-gray-400 font-black text-xs uppercase tracking-widest mr-2 whitespace-nowrap">
+          <Filter size={14} />
+          <span>Filters</span>
+        </div>
+
+        {/* Category Filter */}
+        <div className="relative">
+          <button 
+            onClick={() => setActiveDropdown(activeDropdown === 'category' ? null : 'category')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
+              selectedCategories.length > 0 
+                ? 'bg-[#FF3269]/5 text-[#FF3269] border-[#FF3269]/20' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            <Tag size={14} />
+            Categories {selectedCategories.length > 0 && `(${selectedCategories.length})`}
+            <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'category' ? 'rotate-180' : ''}`} />
+          </button>
+          
+          <AnimatePresence>
+            {activeDropdown === 'category' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-full left-0 mt-2 w-64 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 py-3 z-50 overflow-hidden"
+              >
+                <div className="max-h-64 overflow-y-auto px-2 space-y-1">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => toggleCategory(cat.id)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors group"
+                    >
+                      <span className={`text-sm font-bold ${selectedCategories.includes(cat.id) ? 'text-[#FF3269]' : 'text-gray-600'}`}>
+                        {cat.name}
+                      </span>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        selectedCategories.includes(cat.id) 
+                          ? 'bg-[#FF3269] border-[#FF3269]' 
+                          : 'border-gray-200 group-hover:border-gray-300'
+                      }`}>
+                        {selectedCategories.includes(cat.id) && <Check size={12} className="text-white" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Price Filter */}
-        <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-sm font-bold text-gray-700 border border-gray-200">
+        <div className="relative">
+          <button 
+            onClick={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
+              activePriceRange 
+                ? 'bg-[#FF3269]/5 text-[#FF3269] border-[#FF3269]/20' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
             Price: {activePriceRange ? priceRanges.find(r => r.range?.[0] === activePriceRange[0])?.label : 'All'}
-            <ChevronDown size={14} />
+            <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'price' ? 'rotate-180' : ''}`} />
           </button>
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden group-hover:block z-50">
-            {priceRanges.map((r, i) => (
-              <button
-                key={i}
-                onClick={() => onPriceChange(r.range)}
-                className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${
-                  (activePriceRange === null && r.range === null) || (activePriceRange?.[0] === r.range?.[0] && activePriceRange?.[1] === r.range?.[1])
-                    ? 'text-[#FF3269] bg-[#FF3269]/5'
-                    : 'text-gray-700'
-                }`}
+          
+          <AnimatePresence>
+            {activeDropdown === 'price' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-full left-0 mt-2 w-48 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 py-2 z-50"
               >
-                {r.label}
-              </button>
-            ))}
-          </div>
+                {priceRanges.map((r, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      onPriceChange(r.range);
+                      setActiveDropdown(null);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-between ${
+                      (activePriceRange === null && r.range === null) || (activePriceRange?.[0] === r.range?.[0] && activePriceRange?.[1] === r.range?.[1])
+                        ? 'text-[#FF3269] bg-[#FF3269]/5'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {r.label}
+                    {((activePriceRange === null && r.range === null) || (activePriceRange?.[0] === r.range?.[0] && activePriceRange?.[1] === r.range?.[1])) && <Check size={14} />}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Popularity Filter */}
         <button
           onClick={() => onPopularOnlyChange(!isPopularOnly)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-bold border ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
             isPopularOnly
               ? 'bg-[#FF3269] text-white border-[#FF3269] shadow-lg shadow-[#FF3269]/20'
               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
           }`}
         >
           <Star size={14} fill={isPopularOnly ? 'white' : 'none'} />
-          Popular Only
+          Popular
         </button>
 
         {/* Sort Filter */}
-        <div className="relative group ml-auto">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors text-sm font-bold text-gray-700 border border-gray-200">
+        <div className="relative ml-auto">
+          <button 
+            onClick={() => setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
+              activeSort !== 'newest' 
+                ? 'bg-gray-900 text-white border-gray-900 shadow-lg shadow-gray-900/20' 
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
             <ArrowUpDown size={14} />
-            Sort: {activeSort === 'price-asc' ? 'Price: Low to High' : activeSort === 'price-desc' ? 'Price: High to Low' : 'Default'}
-            <ChevronDown size={14} />
+            {activeSort === 'price-low' ? 'Low to High' : activeSort === 'price-high' ? 'High to Low' : activeSort === 'popularity' ? 'Popularity' : 'Newest'}
+            <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'sort' ? 'rotate-180' : ''}`} />
           </button>
-          <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden group-hover:block z-50">
-            <button
-              onClick={() => onSortChange('none')}
-              className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${activeSort === 'none' ? 'text-[#FF3269] bg-[#FF3269]/5' : 'text-gray-700'}`}
-            >
-              Default
-            </button>
-            <button
-              onClick={() => onSortChange('price-asc')}
-              className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${activeSort === 'price-asc' ? 'text-[#FF3269] bg-[#FF3269]/5' : 'text-gray-700'}`}
-            >
-              Price: Low to High
-            </button>
-            <button
-              onClick={() => onSortChange('price-desc')}
-              className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${activeSort === 'price-desc' ? 'text-[#FF3269] bg-[#FF3269]/5' : 'text-gray-700'}`}
-            >
-              Price: High to Low
-            </button>
-          </div>
+          
+          <AnimatePresence>
+            {activeDropdown === 'sort' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-full right-0 mt-2 w-56 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 py-2 z-50"
+              >
+                {[
+                  { label: 'Newest First', value: 'newest' },
+                  { label: 'Price: Low to High', value: 'price-low' },
+                  { label: 'Price: High to Low', value: 'price-high' },
+                  { label: 'Popularity', value: 'popularity' }
+                ].map((s) => (
+                  <button
+                    key={s.value}
+                    onClick={() => {
+                      onSortChange(s.value as any);
+                      setActiveDropdown(null);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-between ${
+                      activeSort === s.value ? 'text-[#FF3269] bg-[#FF3269]/5' : 'text-gray-700'
+                    }`}
+                  >
+                    {s.label}
+                    {activeSort === s.value && <Check size={14} />}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Clear All Button */}
+        {hasActiveFilters && (
+          <button 
+            onClick={onClearAll}
+            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[#FF3269] hover:bg-[#FF3269]/5 transition-colors text-xs font-black uppercase tracking-wider whitespace-nowrap"
+          >
+            <X size={14} />
+            Clear
+          </button>
+        )}
       </div>
     </div>
   );

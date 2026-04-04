@@ -22,7 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white rounded-2xl p-3 border border-gray-100 hover:shadow-xl transition-all group relative"
+      className="bg-white/40 backdrop-blur-md rounded-2xl p-3 border border-white/20 hover:shadow-xl transition-all group relative"
     >
       <Link to={`/product/${product.id}`}>
         <div className="aspect-square rounded-xl overflow-hidden mb-3 bg-gray-50 relative group/image">
