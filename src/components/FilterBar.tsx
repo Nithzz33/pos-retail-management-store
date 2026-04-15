@@ -81,7 +81,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onClick={() => setActiveDropdown(activeDropdown === 'category' ? null : 'category')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
               selectedCategories.length > 0 
-                ? 'bg-[#FF3269]/5 text-[#FF3269] border-[#FF3269]/20' 
+                ? 'bg-[#0c831f]/5 text-[#0c831f] border-[#0c831f]/20' 
                 : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             }`}
           >
@@ -105,12 +105,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       onClick={() => toggleCategory(cat.id)}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors group"
                     >
-                      <span className={`text-sm font-bold ${selectedCategories.includes(cat.id) ? 'text-[#FF3269]' : 'text-gray-600'}`}>
+                      <span className={`text-sm font-bold ${selectedCategories.includes(cat.id) ? 'text-[#0c831f]' : 'text-gray-600'}`}>
                         {cat.name}
                       </span>
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                         selectedCategories.includes(cat.id) 
-                          ? 'bg-[#FF3269] border-[#FF3269]' 
+                          ? 'bg-[#0c831f] border-[#0c831f]' 
                           : 'border-gray-200 group-hover:border-gray-300'
                       }`}>
                         {selectedCategories.includes(cat.id) && <Check size={12} className="text-white" />}
@@ -129,7 +129,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onClick={() => setActiveDropdown(activeDropdown === 'price' ? null : 'price')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
               activePriceRange 
-                ? 'bg-[#FF3269]/5 text-[#FF3269] border-[#FF3269]/20' 
+                ? 'bg-[#0c831f]/5 text-[#0c831f] border-[#0c831f]/20' 
                 : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
             }`}
           >
@@ -154,7 +154,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     }}
                     className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-between ${
                       (activePriceRange === null && r.range === null) || (activePriceRange?.[0] === r.range?.[0] && activePriceRange?.[1] === r.range?.[1])
-                        ? 'text-[#FF3269] bg-[#FF3269]/5'
+                        ? 'text-[#0c831f] bg-[#0c831f]/5'
                         : 'text-gray-700'
                     }`}
                   >
@@ -172,7 +172,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onClick={() => onPopularOnlyChange(!isPopularOnly)}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all text-sm font-black whitespace-nowrap border ${
             isPopularOnly
-              ? 'bg-[#FF3269] text-white border-[#FF3269] shadow-lg shadow-[#FF3269]/20'
+              ? 'bg-[#0c831f] text-white border-[#0c831f] shadow-lg shadow-[#0c831f]/20'
               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
           }`}
         >
@@ -216,7 +216,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                       setActiveDropdown(null);
                     }}
                     className={`w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-between ${
-                      activeSort === s.value ? 'text-[#FF3269] bg-[#FF3269]/5' : 'text-gray-700'
+                      activeSort === s.value ? 'text-[#0c831f] bg-[#0c831f]/5' : 'text-gray-700'
                     }`}
                   >
                     {s.label}
@@ -232,7 +232,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {hasActiveFilters && (
           <button 
             onClick={onClearAll}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[#FF3269] hover:bg-[#FF3269]/5 transition-colors text-xs font-black uppercase tracking-wider whitespace-nowrap"
+            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[#0c831f] hover:bg-[#0c831f]/5 transition-colors text-xs font-black uppercase tracking-wider whitespace-nowrap"
           >
             <X size={14} />
             Clear

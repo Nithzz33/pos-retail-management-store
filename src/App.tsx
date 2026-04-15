@@ -13,7 +13,7 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="min-h-screen flex flex-col selection:bg-[#FF3269] selection:text-white">
+        <div className="min-h-screen flex flex-col selection:bg-[#0c831f] selection:text-white">
           <Header />
           <div className="flex-1 flex flex-col">
             <Routes>

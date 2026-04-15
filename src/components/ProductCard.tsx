@@ -53,7 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             Out of Stock
           </span>
         ) : cartItem ? (
-          <div className="flex items-center bg-[#FF3269] text-white rounded-lg px-2 py-1.5 gap-3 shadow-md shadow-[#FF3269]/20">
+          <div className="flex items-center bg-[#0c831f] text-white rounded-lg px-2 py-1.5 gap-3 shadow-md shadow-[#0c831f]/20">
             <button 
               onClick={() => cartItem.quantity === 1 ? removeFromCart(cartItem.id) : updateQuantity(cartItem.id, cartItem.quantity - 1)}
               className="hover:scale-110 transition-transform"
@@ -72,7 +72,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         ) : (
           <button 
             onClick={() => addToCart(product)}
-            className="bg-white border border-[#FF3269] text-[#FF3269] px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-[#FF3269]/5 transition-all active:scale-95 shadow-sm"
+            className="bg-white border border-[#0c831f] text-[#0c831f] px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-[#0c831f]/5 transition-all active:scale-95 shadow-sm"
           >
             ADD
           </button>

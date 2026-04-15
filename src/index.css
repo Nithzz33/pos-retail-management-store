@@ -10,19 +10,6 @@
   body {
     @apply bg-[#F5F2ED] min-h-screen relative overflow-x-hidden;
   }
-  
-  body::before {
-    content: "";
-    @apply fixed inset-0 -z-10 opacity-40 pointer-events-none;
-    background: 
-      radial-gradient(at 0% 0%, #FF3269 0px, transparent 50%),
-      radial-gradient(at 50% 0%, #4F46E5 0px, transparent 50%),
-      radial-gradient(at 100% 0%, #10B981 0px, transparent 50%),
-      radial-gradient(at 0% 100%, #F59E0B 0px, transparent 50%),
-      radial-gradient(at 50% 100%, #EC4899 0px, transparent 50%),
-      radial-gradient(at 100% 100%, #3B82F6 0px, transparent 50%);
-    filter: blur(100px);
-  }
 }
 
 @layer utilities {

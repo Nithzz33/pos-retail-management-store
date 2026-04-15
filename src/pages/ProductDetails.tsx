@@ -125,7 +125,7 @@ export const ProductDetails: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-[#FF3269]" size={48} />
+        <Loader2 className="animate-spin text-[#0c831f]" size={48} />
       </div>
     );
   }
@@ -134,7 +134,7 @@ export const ProductDetails: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <h2 className="text-2xl font-black text-gray-800 mb-4">Product not found</h2>
-        <Link to="/" className="text-[#FF3269] font-bold hover:underline">Back to Home</Link>
+        <Link to="/" className="text-[#0c831f] font-bold hover:underline">Back to Home</Link>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export const ProductDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-bg pb-20">
       <div className="container mx-auto px-4 py-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#FF3269] font-bold mb-8 transition-colors">
+        <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#0c831f] font-bold mb-8 transition-colors">
           <ChevronLeft size={20} /> Back to Shopping
         </Link>
 
@@ -174,7 +174,7 @@ export const ProductDetails: React.FC = () => {
                   <button 
                     key={i}
                     onClick={() => setSelectedImageIndex(i)}
-                    className={`w-20 h-20 rounded-xl border-2 flex-shrink-0 overflow-hidden transition-all ${selectedImageIndex === i ? 'border-[#FF3269]' : 'border-transparent bg-gray-50'}`}
+                    className={`w-20 h-20 rounded-xl border-2 flex-shrink-0 overflow-hidden transition-all ${selectedImageIndex === i ? 'border-[#0c831f]' : 'border-transparent bg-gray-50'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-contain p-2" referrerPolicy="no-referrer" />
                   </button>
@@ -206,7 +206,7 @@ export const ProductDetails: React.FC = () => {
                 <span className="text-5xl font-black text-gray-900">₹{product.discountPrice || product.price}</span>
               </div>
               {product.discountPrice && (
-                <div className="bg-[#FF3269] text-white px-3 py-1 rounded-full text-sm font-black mb-2">
+                <div className="bg-[#0c831f] text-white px-3 py-1 rounded-full text-sm font-black mb-2">
                   {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                 </div>
               )}
@@ -218,7 +218,7 @@ export const ProductDetails: React.FC = () => {
                   Out of Stock
                 </div>
               ) : cartItem ? (
-                <div className="flex items-center bg-[#FF3269] text-white rounded-2xl px-6 py-4 gap-8 shadow-lg shadow-[#FF3269]/20">
+                <div className="flex items-center bg-[#0c831f] text-white rounded-2xl px-6 py-4 gap-8 shadow-lg shadow-[#0c831f]/20">
                   <button 
                     onClick={() => cartItem.quantity === 1 ? removeFromCart(cartItem.id) : updateQuantity(cartItem.id, cartItem.quantity - 1)}
                     className="hover:scale-125 transition-transform"
@@ -237,7 +237,7 @@ export const ProductDetails: React.FC = () => {
               ) : (
                 <button 
                   onClick={() => addToCart(product)}
-                  className="flex-1 bg-[#FF3269] text-white px-8 py-4 rounded-2xl font-black text-xl shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="flex-1 bg-[#0c831f] text-white px-8 py-4 rounded-2xl font-black text-xl shadow-lg shadow-[#0c831f]/20 hover:bg-[#0a6c19] transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
                   <ShoppingCart size={24} /> Add to Cart
                 </button>
@@ -253,15 +253,15 @@ export const ProductDetails: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
-                <Clock className="text-[#FF3269] mb-2" size={24} />
+                <Clock className="text-[#0c831f] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">10 Mins Delivery</span>
               </div>
               <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
-                <ShieldCheck className="text-[#FF3269] mb-2" size={24} />
+                <ShieldCheck className="text-[#0c831f] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">Quality Assured</span>
               </div>
               <div className="flex flex-col items-center text-center p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20">
-                <Truck className="text-[#FF3269] mb-2" size={24} />
+                <Truck className="text-[#0c831f] mb-2" size={24} />
                 <span className="text-xs font-black text-gray-900">Free Shipping</span>
               </div>
             </div>
@@ -326,7 +326,7 @@ export const ProductDetails: React.FC = () => {
                     value={newReview.comment}
                     onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
                     placeholder="Share your thoughts about this product..."
-                    className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-[#FF3269] outline-none min-h-[120px]"
+                    className="w-full bg-white/40 backdrop-blur-md border border-white/20 rounded-2xl p-4 font-medium focus:ring-2 focus:ring-[#0c831f] outline-none min-h-[120px]"
                   />
                   <button
                     type="submit"
@@ -355,7 +355,7 @@ export const ProductDetails: React.FC = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm border border-white/20 flex items-center justify-center font-black text-[#FF3269]">
+                        <div className="w-10 h-10 rounded-full bg-white/40 backdrop-blur-sm border border-white/20 flex items-center justify-center font-black text-[#0c831f]">
                           {review.userName[0].toUpperCase()}
                         </div>
                         <div>

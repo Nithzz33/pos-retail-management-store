@@ -39,7 +39,7 @@ export const CategoryNav: React.FC = () => {
                 whileHover={{ y: -5 }}
                 className="bg-card-bg p-4 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group text-center"
               >
-                <div className="aspect-square bg-gray-50 rounded-2xl p-3 mb-3 group-hover:bg-[#FF3269]/5 transition-colors">
+                <div className="aspect-square bg-gray-50 rounded-2xl p-3 mb-3 group-hover:bg-[#0c831f]/5 transition-colors">
                   <img 
                     src={cat.imageUrl} 
                     alt={cat.name} 
@@ -47,7 +47,7 @@ export const CategoryNav: React.FC = () => {
                     referrerPolicy="no-referrer"
                   />
                 </div>
-                <span className="text-xs font-black text-gray-700 group-hover:text-[#FF3269] transition-colors line-clamp-2 leading-tight">
+                <span className="text-xs font-black text-gray-700 group-hover:text-[#0c831f] transition-colors line-clamp-2 leading-tight">
                   {cat.name}
                 </span>
               </motion.div>

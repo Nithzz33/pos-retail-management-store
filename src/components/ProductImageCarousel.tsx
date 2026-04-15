@@ -118,7 +118,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = ({
                 handleIndexChange(i, i > currentIndex ? 1 : -1);
               }}
               className={`w-1.5 h-1.5 rounded-full transition-all ${
-                i === currentIndex ? 'bg-[#FF3269] w-4' : 'bg-gray-300'
+                i === currentIndex ? 'bg-[#0c831f] w-4' : 'bg-gray-300'
               }`}
             />
           ))}

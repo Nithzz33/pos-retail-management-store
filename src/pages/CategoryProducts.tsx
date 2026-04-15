@@ -99,7 +99,7 @@ export const CategoryProducts: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-[#FF3269]" size={48} />
+        <Loader2 className="animate-spin text-[#0c831f]" size={48} />
       </div>
     );
   }
@@ -160,7 +160,7 @@ export const CategoryProducts: React.FC = () => {
             </div>
             <h3 className="text-xl font-black text-gray-800">No products in this category</h3>
             <p className="text-gray-500 font-medium">We're currently restocking items for this category.</p>
-            <Link to="/" className="mt-6 inline-block bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black">
+            <Link to="/" className="mt-6 inline-block bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black">
               Back to Home
             </Link>
           </div>

@@ -24,7 +24,7 @@ export const CategoryBar: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               className="flex flex-col items-center gap-2 cursor-pointer group"
             >
-              <div className="w-16 h-16 rounded-2xl bg-gray-50 p-2 group-hover:bg-[#FF3269]/5 transition-colors">
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 p-2 group-hover:bg-[#0c831f]/5 transition-colors">
                 <img 
                   src={cat.imageUrl} 
                   alt={cat.name} 
@@ -32,7 +32,7 @@ export const CategoryBar: React.FC = () => {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-[11px] font-bold text-gray-600 group-hover:text-[#FF3269] transition-colors text-center max-w-[80px]">
+              <span className="text-[11px] font-bold text-gray-600 group-hover:text-[#0c831f] transition-colors text-center max-w-[80px]">
                 {cat.name}
               </span>
             </motion.div>

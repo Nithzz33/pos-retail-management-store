@@ -101,17 +101,17 @@ export const Header: React.FC = () => {
         <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 lg:gap-8">
           {/* Logo & Location */}
           <div className="flex items-center gap-4 lg:gap-8">
-            <Link to="/" className="text-2xl lg:text-3xl font-black text-[#FF3269] tracking-tighter cursor-pointer">
-              Zepto<span className="text-gray-800">Mart</span>
+            <Link to="/" className="text-2xl lg:text-3xl font-black tracking-tighter cursor-pointer flex items-center">
+              <span className="text-[#f8cb46]">blink</span><span className="text-[#0c831f]">it</span>
             </Link>
             
             {/* Location */}
             <div className="hidden md:flex flex-col cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
               <div className="flex items-center gap-1 text-[10px] lg:text-xs font-black text-gray-800 uppercase tracking-wider">
-                Delivery in 10 Mins <ChevronDown size={14} className="text-[#FF3269]" />
+                Delivery in 8 Mins <ChevronDown size={14} className="text-[#0c831f]" />
               </div>
               <div className="flex items-center gap-1 text-xs lg:text-sm font-medium text-gray-500 truncate max-w-[200px]">
-                <MapPin size={14} className="text-[#FF3269] flex-shrink-0" />
+                <MapPin size={14} className="text-[#0c831f] flex-shrink-0" />
                 <span className="truncate">Select your delivery location</span>
               </div>
             </div>
@@ -128,7 +128,7 @@ export const Header: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
               placeholder='Search for "milk", "bread", "fruits"...' 
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-10 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] transition-all outline-none text-gray-700 font-medium text-sm lg:text-base"
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-10 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] transition-all outline-none text-gray-700 font-medium text-sm lg:text-base"
             />
             {searchTerm && (
               <button 
@@ -164,7 +164,7 @@ export const Header: React.FC = () => {
                             <img src={product.imageUrl} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-gray-800 text-sm truncate group-hover:text-[#FF3269] transition-colors">{product.name}</h4>
+                            <h4 className="font-bold text-gray-800 text-sm truncate group-hover:text-[#0c831f] transition-colors">{product.name}</h4>
                             <p className="text-xs text-gray-400 font-medium">{product.unit}</p>
                           </div>
                           <div className="text-right">
@@ -203,7 +203,7 @@ export const Header: React.FC = () => {
                   </div>
                   <div className="hidden md:block">
                     <span className="text-[10px] font-bold text-gray-400 uppercase block leading-none">Account</span>
-                    <span className="font-bold text-gray-700 group-hover:text-[#FF3269] transition-colors flex items-center gap-1 text-sm leading-none mt-1">
+                    <span className="font-bold text-gray-700 group-hover:text-[#0c831f] transition-colors flex items-center gap-1 text-sm leading-none mt-1">
                       {user.displayName?.split(' ')[0] || 'User'} <ChevronDown size={14} />
                     </span>
                   </div>
@@ -221,7 +221,7 @@ export const Header: React.FC = () => {
                       >
                         <Link 
                           to="/order-history" 
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FF3269] transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <History size={18} />
@@ -230,7 +230,7 @@ export const Header: React.FC = () => {
                         {isAdmin && (
                           <Link 
                             to="/pos-history" 
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FF3269] transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <ShoppingBag size={18} />
@@ -240,7 +240,7 @@ export const Header: React.FC = () => {
                         {isAdmin && (
                           <Link 
                             to="/admin" 
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#FF3269] transition-colors"
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <LayoutDashboard size={18} />
@@ -280,7 +280,7 @@ export const Header: React.FC = () => {
                     }
                   }
                 }}
-                className="font-bold text-gray-700 hover:text-[#FF3269] transition-colors px-4 py-2 hover:bg-gray-50 rounded-xl"
+                className="font-bold text-gray-700 hover:text-[#0c831f] transition-colors px-4 py-2 hover:bg-gray-50 rounded-xl"
               >
                 Login
               </button>
@@ -288,7 +288,7 @@ export const Header: React.FC = () => {
 
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="bg-[#FF3269] text-white px-4 lg:px-5 py-2.5 lg:py-3 rounded-2xl flex items-center gap-3 font-black hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20 hover:shadow-[#FF3269]/40 hover:-translate-y-0.5"
+              className="bg-[#0c831f] text-white px-4 lg:px-5 py-2.5 lg:py-3 rounded-2xl flex items-center gap-3 font-black hover:bg-[#0a6c19] transition-all shadow-lg shadow-[#0c831f]/20 hover:shadow-[#0c831f]/40 hover:-translate-y-0.5"
             >
               <ShoppingCart size={20} />
               <div className="hidden sm:flex flex-col items-start leading-none">
@@ -318,7 +318,7 @@ export const Header: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
               placeholder='Search for "milk", "bread"...' 
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] transition-all outline-none text-gray-700 font-medium text-sm"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] transition-all outline-none text-gray-700 font-medium text-sm"
             />
           </div>
         </div>
@@ -332,8 +332,8 @@ export const Header: React.FC = () => {
           onClick={() => navigate('/admin', { state: { activeTab: 'pos' } })}
           className="fixed bottom-6 left-6 z-50 bg-gray-900 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:bg-gray-800 hover:-translate-y-1 transition-all group border-4 border-white"
         >
-          <LayoutDashboard size={24} className="text-[#FF3269]" />
-          <span className="font-black pr-2 hidden md:block group-hover:text-[#FF3269] transition-colors">Admin POS</span>
+          <LayoutDashboard size={24} className="text-[#0c831f]" />
+          <span className="font-black pr-2 hidden md:block group-hover:text-[#0c831f] transition-colors">Admin POS</span>
         </button>
       )}
     </>

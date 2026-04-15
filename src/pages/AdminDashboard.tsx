@@ -409,7 +409,7 @@ export const AdminDashboard: React.FC = () => {
     .filter(c => c.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue);
 
-  const COLORS = ['#FF3269', '#4F46E5', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6'];
+  const COLORS = ['#0c831f', '#4F46E5', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6'];
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
@@ -651,7 +651,7 @@ export const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="animate-spin text-[#FF3269]" size={48} />
+        <Loader2 className="animate-spin text-[#0c831f]" size={48} />
       </div>
     );
   }
@@ -690,7 +690,7 @@ export const AdminDashboard: React.FC = () => {
       >
         <div className="p-6 border-b border-gray-100 flex items-center justify-between min-w-[260px]">
           <div>
-            <h1 className="text-2xl font-black text-[#FF3269] tracking-tighter">Zepto<span className="text-gray-800">Admin</span></h1>
+            <h1 className="text-2xl font-black text-[#0c831f] tracking-tighter">Blink<span className="text-gray-800">Admin</span></h1>
           </div>
           <button 
             onClick={() => setIsSidebarOpen(false)}
@@ -703,75 +703,75 @@ export const AdminDashboard: React.FC = () => {
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto min-w-[260px] custom-scrollbar">
           <button 
             onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'overview' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'overview' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <TrendingUp size={18} className={activeTab === 'overview' ? 'text-[#FF3269]' : 'text-gray-400'} /> Overview
+            <TrendingUp size={18} className={activeTab === 'overview' ? 'text-[#0c831f]' : 'text-gray-400'} /> Overview
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'orders' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'orders' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <ShoppingBag size={18} className={activeTab === 'orders' ? 'text-[#FF3269]' : 'text-gray-400'} /> Orders
+            <ShoppingBag size={18} className={activeTab === 'orders' ? 'text-[#0c831f]' : 'text-gray-400'} /> Orders
           </button>
           <button 
             onClick={() => setActiveTab('inventory')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'inventory' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'inventory' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Package size={18} className={activeTab === 'inventory' ? 'text-[#FF3269]' : 'text-gray-400'} /> Inventory
+            <Package size={18} className={activeTab === 'inventory' ? 'text-[#0c831f]' : 'text-gray-400'} /> Inventory
           </button>
           <button 
             onClick={() => setActiveTab('categories')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'categories' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'categories' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Tag size={18} className={activeTab === 'categories' ? 'text-[#FF3269]' : 'text-gray-400'} /> Categories
+            <Tag size={18} className={activeTab === 'categories' ? 'text-[#0c831f]' : 'text-gray-400'} /> Categories
           </button>
           <button 
             onClick={() => setActiveTab('pos')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'pos' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'pos' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <ShoppingCart size={18} className={activeTab === 'pos' ? 'text-[#FF3269]' : 'text-gray-400'} /> Store POS
+            <ShoppingCart size={18} className={activeTab === 'pos' ? 'text-[#0c831f]' : 'text-gray-400'} /> Store POS
           </button>
           <button 
             onClick={() => setActiveTab('sales')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'sales' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'sales' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Banknote size={18} className={activeTab === 'sales' ? 'text-[#FF3269]' : 'text-gray-400'} /> Store Sales
+            <Banknote size={18} className={activeTab === 'sales' ? 'text-[#0c831f]' : 'text-gray-400'} /> Store Sales
           </button>
           <button 
             onClick={() => setActiveTab('procurement')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'procurement' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'procurement' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Scan size={18} className={activeTab === 'procurement' ? 'text-[#FF3269]' : 'text-gray-400'} /> Procurement
+            <Scan size={18} className={activeTab === 'procurement' ? 'text-[#0c831f]' : 'text-gray-400'} /> Procurement
           </button>
           <button 
             onClick={() => setActiveTab('customers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'customers' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'customers' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Users size={18} className={activeTab === 'customers' ? 'text-[#FF3269]' : 'text-gray-400'} /> Customers
+            <Users size={18} className={activeTab === 'customers' ? 'text-[#0c831f]' : 'text-gray-400'} /> Customers
           </button>
           <button 
             onClick={() => setActiveTab('offers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'offers' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'offers' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Tag size={18} className={activeTab === 'offers' ? 'text-[#FF3269]' : 'text-gray-400'} /> Offers
+            <Tag size={18} className={activeTab === 'offers' ? 'text-[#0c831f]' : 'text-gray-400'} /> Offers
           </button>
           <button 
             onClick={() => setActiveTab('rider-matching')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-matching' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-matching' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Truck size={18} className={activeTab === 'rider-matching' ? 'text-[#FF3269]' : 'text-gray-400'} /> Rider Matching
+            <Truck size={18} className={activeTab === 'rider-matching' ? 'text-[#0c831f]' : 'text-gray-400'} /> Rider Matching
           </button>
           <button 
             onClick={() => setActiveTab('rider-assignment-history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-assignment-history' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-assignment-history' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <History size={18} className={activeTab === 'rider-assignment-history' ? 'text-[#FF3269]' : 'text-gray-400'} /> Assignment History
+            <History size={18} className={activeTab === 'rider-assignment-history' ? 'text-[#0c831f]' : 'text-gray-400'} /> Assignment History
           </button>
           <button 
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'settings' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'settings' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Settings size={18} className={activeTab === 'settings' ? 'text-[#FF3269]' : 'text-gray-400'} /> Settings
+            <Settings size={18} className={activeTab === 'settings' ? 'text-[#0c831f]' : 'text-gray-400'} /> Settings
           </button>
         </nav>
 
@@ -779,7 +779,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
             <div className="relative">
               <img 
-                src={auth.currentUser?.photoURL || `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'Admin'}&background=FF3269&color=fff`} 
+                src={auth.currentUser?.photoURL || `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'Admin'}&background=0c831f&color=fff`} 
                 alt="Admin" 
                 className="w-10 h-10 rounded-xl object-cover"
                 referrerPolicy="no-referrer"
@@ -800,7 +800,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl shadow-sm border border-gray-100 transition-all text-gray-600 hover:text-[#FF3269]"
+                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl shadow-sm border border-gray-100 transition-all text-gray-600 hover:text-[#0c831f]"
               >
                 {isSidebarOpen ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
               </button>
@@ -836,7 +836,7 @@ export const AdminDashboard: React.FC = () => {
                 { label: 'Today Sales', value: `₹${stats.today}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
                 { label: 'Weekly Sales', value: `₹${stats.week}`, icon: ArrowUpRight, color: 'text-green-600', bg: 'bg-green-50' },
                 { label: 'Monthly Sales', value: `₹${stats.month}`, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' },
-                { label: 'Total Revenue', value: `₹${stats.totalRevenue}`, icon: TrendingUp, color: 'text-[#FF3269]', bg: 'bg-[#FF3269]/10' },
+                { label: 'Total Revenue', value: `₹${stats.totalRevenue}`, icon: TrendingUp, color: 'text-[#0c831f]', bg: 'bg-[#0c831f]/10' },
               ].map((stat, i) => (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
@@ -863,8 +863,8 @@ export const AdminDashboard: React.FC = () => {
                     <AreaChart data={last7Days}>
                       <defs>
                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#FF3269" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#FF3269" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#0c831f" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="#0c831f" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -872,9 +872,9 @@ export const AdminDashboard: React.FC = () => {
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
                       <Tooltip 
                         contentStyle={{ borderRadius: '16px', border: '1px solid #f3f4f6', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ fontWeight: 800, color: '#FF3269' }}
+                        itemStyle={{ fontWeight: 800, color: '#0c831f' }}
                       />
-                      <Area type="monotone" dataKey="sales" stroke="#FF3269" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                      <Area type="monotone" dataKey="sales" stroke="#0c831f" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -993,7 +993,7 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-black text-[#FF3269]">{p.totalSold} sold</p>
+                        <p className="font-black text-[#0c831f]">{p.totalSold} sold</p>
                         <p className="text-xs font-bold text-gray-400">₹{(p.discountPrice || p.price) * p.totalSold} revenue</p>
                       </div>
                     </div>
@@ -1050,7 +1050,7 @@ export const AdminDashboard: React.FC = () => {
                 <input 
                   type="text" 
                   placeholder="Search orders..." 
-                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none text-sm font-medium transition-all"
+                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none text-sm font-medium transition-all"
                 />
               </div>
             </div>
@@ -1101,7 +1101,7 @@ export const AdminDashboard: React.FC = () => {
                         <select 
                           value={order.status}
                           onChange={(e) => updateOrderStatus(order.id, e.target.value as Order['status'])}
-                          className="bg-gray-100 border-none rounded-lg text-xs font-bold py-1 px-2 focus:ring-2 focus:ring-[#FF3269] outline-none"
+                          className="bg-gray-100 border-none rounded-lg text-xs font-bold py-1 px-2 focus:ring-2 focus:ring-[#0c831f] outline-none"
                         >
                           <option value="placed">Placed</option>
                           <option value="pending">Pending</option>
@@ -1115,7 +1115,7 @@ export const AdminDashboard: React.FC = () => {
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => printInvoice(order)}
-                          className="p-2 text-gray-400 hover:text-[#FF3269] hover:bg-[#FF3269]/5 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-[#0c831f] hover:bg-[#0c831f]/5 rounded-lg transition-colors"
                           title="Print Invoice"
                         >
                           <Printer size={18} />
@@ -1150,7 +1150,7 @@ export const AdminDashboard: React.FC = () => {
                 <button 
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
-                  className="bg-white text-[#FF3269] border border-[#FF3269] px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#FF3269]/5 transition-all disabled:opacity-50"
+                  className="bg-white text-[#0c831f] border border-[#0c831f] px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#0c831f]/5 transition-all disabled:opacity-50"
                 >
                   {isImporting ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
                   Bulk Import
@@ -1186,7 +1186,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
-                <div key={product.id} className={`bg-white p-6 rounded-3xl shadow-sm border ${selectedProducts.includes(product.id) ? 'border-[#FF3269] ring-2 ring-[#FF3269]/10' : 'border-gray-100'} flex gap-4 group hover:shadow-xl transition-all relative`}>
+                <div key={product.id} className={`bg-white p-6 rounded-3xl shadow-sm border ${selectedProducts.includes(product.id) ? 'border-[#0c831f] ring-2 ring-[#0c831f]/10' : 'border-gray-100'} flex gap-4 group hover:shadow-xl transition-all relative`}>
                   <button 
                     onClick={() => {
                       if (selectedProducts.includes(product.id)) {
@@ -1197,7 +1197,7 @@ export const AdminDashboard: React.FC = () => {
                     }}
                     className={`absolute top-4 left-4 z-10 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                       selectedProducts.includes(product.id) 
-                        ? 'bg-[#FF3269] border-[#FF3269] text-white' 
+                        ? 'bg-[#0c831f] border-[#0c831f] text-white' 
                         : 'bg-white border-gray-200 text-transparent group-hover:border-gray-300'
                     }`}
                   >
@@ -1218,7 +1218,7 @@ export const AdminDashboard: React.FC = () => {
                           setProductForm(product);
                           setIsProductModalOpen(true);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-[#FF3269] hover:bg-[#FF3269]/5 rounded-lg transition-all"
+                        className="p-1.5 text-gray-400 hover:text-[#0c831f] hover:bg-[#0c831f]/5 rounded-lg transition-all"
                       >
                         <Edit size={16} />
                       </button>
@@ -1244,7 +1244,7 @@ export const AdminDashboard: React.FC = () => {
                       {product.stock < 10 && (
                         <button 
                           onClick={() => procureProduct(product.id, product.stock)}
-                          className="flex-1 bg-[#FF3269] text-white px-3 py-1.5 rounded-xl text-[10px] font-black hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-1"
+                          className="flex-1 bg-[#0c831f] text-white px-3 py-1.5 rounded-xl text-[10px] font-black hover:bg-[#0a6c19] transition-all flex items-center justify-center gap-1"
                         >
                           <RefreshCw size={10} /> Procure
                         </button>
@@ -1274,7 +1274,7 @@ export const AdminDashboard: React.FC = () => {
                   setCategoryProducts([]);
                   setIsCategoryModalOpen(true);
                 }}
-                className="bg-[#FF3269] text-white px-6 py-3 rounded-2xl font-bold hover:bg-[#E62D5E] transition-colors shadow-lg shadow-[#FF3269]/20 flex items-center gap-2"
+                className="bg-[#0c831f] text-white px-6 py-3 rounded-2xl font-bold hover:bg-[#0a6c19] transition-colors shadow-lg shadow-[#0c831f]/20 flex items-center gap-2"
               >
                 <Plus size={20} /> Add Category
               </button>
@@ -1382,7 +1382,7 @@ export const AdminDashboard: React.FC = () => {
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => printInvoice(sale)}
-                          className="p-2 text-gray-400 hover:text-[#FF3269] hover:bg-[#FF3269]/5 rounded-lg transition-colors"
+                          className="p-2 text-gray-400 hover:text-[#0c831f] hover:bg-[#0c831f]/5 rounded-lg transition-colors"
                           title="Print Invoice"
                         >
                           <Printer size={18} />
@@ -1406,7 +1406,7 @@ export const AdminDashboard: React.FC = () => {
         {activeTab === 'procurement' && (
           <div className="space-y-8">
             <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-              <div className="w-20 h-20 bg-[#FF3269]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#FF3269]">
+              <div className="w-20 h-20 bg-[#0c831f]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#0c831f]">
                 <Scan size={40} />
               </div>
               <h3 className="text-2xl font-black text-gray-900 mb-2">Inventory Procurement</h3>
@@ -1432,7 +1432,7 @@ export const AdminDashboard: React.FC = () => {
                       }
                     }}
                     placeholder="Enter or scan barcode..." 
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                   />
                   {procurementBarcode && (
                     <button 
@@ -1479,7 +1479,7 @@ export const AdminDashboard: React.FC = () => {
                             type="number" 
                             value={procurementQuantity}
                             onChange={(e) => setProcurementQuantity(parseInt(e.target.value))}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold transition-all"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold transition-all"
                           />
                         </div>
                         <div>
@@ -1488,7 +1488,7 @@ export const AdminDashboard: React.FC = () => {
                             type="number" 
                             value={procurementCost}
                             onChange={(e) => setProcurementCost(parseFloat(e.target.value))}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold transition-all"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold transition-all"
                           />
                         </div>
                       </div>
@@ -1518,7 +1518,7 @@ export const AdminDashboard: React.FC = () => {
                             toast.error('Failed to update stock');
                           }
                         }}
-                        className="w-full bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all shadow-sm"
+                        className="w-full bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black hover:bg-[#0a6c19] transition-all shadow-sm"
                       >
                         Update Stock
                       </button>
@@ -1573,7 +1573,7 @@ export const AdminDashboard: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 font-bold text-gray-900">{proc.quantity}</td>
                           <td className="px-6 py-4 font-bold text-gray-900">₹{proc.costPrice}</td>
-                          <td className="px-6 py-4 font-black text-[#FF3269]">₹{proc.quantity * proc.costPrice}</td>
+                          <td className="px-6 py-4 font-black text-[#0c831f]">₹{proc.quantity * proc.costPrice}</td>
                           <td className="px-6 py-4 text-sm font-bold text-gray-500">
                             {proc.createdAt?.toDate ? format(proc.createdAt.toDate(), 'MMM d, HH:mm') : 'N/A'}
                           </td>
@@ -1606,7 +1606,7 @@ export const AdminDashboard: React.FC = () => {
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     placeholder="Search by name or email..." 
-                    className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none text-sm font-medium w-64 transition-all"
+                    className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none text-sm font-medium w-64 transition-all"
                   />
                 </div>
               </div>
@@ -1655,7 +1655,7 @@ export const AdminDashboard: React.FC = () => {
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                u.role === 'admin' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'bg-gray-100 text-gray-500'
+                                u.role === 'admin' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'bg-gray-100 text-gray-500'
                               }`}>
                                 {u.role}
                               </span>
@@ -1676,7 +1676,7 @@ export const AdminDashboard: React.FC = () => {
                                     toast.error('Failed to update role');
                                   }
                                 }}
-                                className="bg-gray-100 border-none rounded-lg text-xs font-bold py-1 px-2 focus:ring-2 focus:ring-[#FF3269] outline-none"
+                                className="bg-gray-100 border-none rounded-lg text-xs font-bold py-1 px-2 focus:ring-2 focus:ring-[#0c831f] outline-none"
                               >
                                 <option value="user">User</option>
                                 <option value="admin">Admin</option>
@@ -1724,7 +1724,7 @@ export const AdminDashboard: React.FC = () => {
                     }).then(() => toast.success("Offer added successfully"))
                       .catch(e => handleFirestoreError(e, OperationType.CREATE, 'offers'));
                   }}
-                  className="bg-[#FF3269] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#e62a5d] transition-colors shadow-sm"
+                  className="bg-[#0c831f] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#e62a5d] transition-colors shadow-sm"
                 >
                   <Plus size={18} /> Add Offer
                 </button>
@@ -1825,13 +1825,13 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button 
                       onClick={() => setFilterOnlineOnly(true)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${filterOnlineOnly ? 'bg-white text-[#0c831f] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       Online Only
                     </button>
                     <button 
                       onClick={() => setFilterOnlineOnly(false)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${!filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${!filterOnlineOnly ? 'bg-white text-[#0c831f] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       All Riders
                     </button>
@@ -1854,13 +1854,13 @@ export const AdminDashboard: React.FC = () => {
                       onClick={() => setSelectedOrderForMatching(order)}
                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         selectedOrderForMatching?.id === order.id 
-                          ? 'border-[#FF3269] bg-[#FF3269]/5' 
+                          ? 'border-[#0c831f] bg-[#0c831f]/5' 
                           : 'border-gray-100 hover:border-gray-200 bg-white'
                       }`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-xs font-black text-gray-400">#{order.id.slice(-6)}</span>
-                        <span className="text-xs font-black text-[#FF3269]">₹{order.totalAmount}</span>
+                        <span className="text-xs font-black text-[#0c831f]">₹{order.totalAmount}</span>
                       </div>
                       <p className="text-sm font-bold text-gray-800 truncate">{order.deliveryAddress}</p>
                       <div className="flex items-center justify-between mt-1">
@@ -1868,7 +1868,7 @@ export const AdminDashboard: React.FC = () => {
                           {order.items.length} items • {format(order.createdAt?.toDate?.() || new Date(), 'HH:mm')}
                         </p>
                         {order.pickupLocation && (
-                          <div className="flex items-center gap-1 text-[10px] font-black text-[#FF3269] uppercase tracking-tighter">
+                          <div className="flex items-center gap-1 text-[10px] font-black text-[#0c831f] uppercase tracking-tighter">
                             <MapPin size={10} /> Has Location
                           </div>
                         )}
@@ -1934,7 +1934,7 @@ export const AdminDashboard: React.FC = () => {
                             <h5 className="text-xs font-black text-gray-400 uppercase tracking-wider">Algorithm Recommendations</h5>
                             <button 
                               onClick={() => setMatchingResults([])}
-                              className="text-[10px] font-black text-[#FF3269] uppercase hover:underline"
+                              className="text-[10px] font-black text-[#0c831f] uppercase hover:underline"
                             >
                               Clear Results
                             </button>
@@ -1951,7 +1951,7 @@ export const AdminDashboard: React.FC = () => {
                                 onMouseLeave={() => setHoveredRiderId(null)}
                                 className={`p-4 rounded-2xl bg-white border-2 flex items-center justify-between transition-all ${
                                   assignedRiderId === result.riderId ? 'border-green-500 bg-green-50' : 
-                                  hoveredRiderId === result.riderId ? 'border-[#FF3269] shadow-md scale-[1.02]' : 'border-gray-100'
+                                  hoveredRiderId === result.riderId ? 'border-[#0c831f] shadow-md scale-[1.02]' : 'border-gray-100'
                                 }`}
                               >
                                 <div className="flex items-center gap-4">
@@ -1976,7 +1976,7 @@ export const AdminDashboard: React.FC = () => {
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-xs font-black text-[#FF3269]">Score: {result.score.toFixed(2)}</p>
+                                  <p className="text-xs font-black text-[#0c831f]">Score: {result.score.toFixed(2)}</p>
                                   <button
                                     onClick={async () => {
                                       setAssignedRiderId(result.riderId);
@@ -2013,7 +2013,7 @@ export const AdminDashboard: React.FC = () => {
                                         setMatchingResults([]);
                                       }
                                     }}
-                                    className="mt-2 px-4 py-1 bg-[#FF3269] text-white rounded-lg font-black text-[10px] hover:bg-[#E62D5E] transition-all"
+                                    className="mt-2 px-4 py-1 bg-[#0c831f] text-white rounded-lg font-black text-[10px] hover:bg-[#0a6c19] transition-all"
                                   >
                                     Assign
                                   </button>
@@ -2091,9 +2091,9 @@ export const AdminDashboard: React.FC = () => {
                                     toast.error('Failed to assign rider manually', { id: 'manual-assign' });
                                   }
                                 }}
-                                className="p-3 rounded-xl bg-white border border-gray-100 hover:border-[#FF3269] hover:shadow-md transition-all text-left flex items-center gap-3 group"
+                                className="p-3 rounded-xl bg-white border border-gray-100 hover:border-[#0c831f] hover:shadow-md transition-all text-left flex items-center gap-3 group"
                               >
-                                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center font-black text-[#FF3269] group-hover:bg-[#FF3269] group-hover:text-white transition-colors">
+                                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center font-black text-[#0c831f] group-hover:bg-[#0c831f] group-hover:text-white transition-colors">
                                   {rider.name[0]}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -2154,7 +2154,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-center py-20">
-                      <Sparkles className="text-[#FF3269] mb-4 opacity-20" size={48} />
+                      <Sparkles className="text-[#0c831f] mb-4 opacity-20" size={48} />
                       <h4 className="text-lg font-black text-gray-900 mb-2">Ready to Match</h4>
                       <p className="text-gray-400 font-medium max-w-xs">Select a pending order from the left to begin the high-performance matching process.</p>
                     </div>
@@ -2166,24 +2166,24 @@ export const AdminDashboard: React.FC = () => {
             {/* Algorithm Explanation Card */}
             <div className="bg-gray-900 text-white p-8 rounded-3xl shadow-xl">
               <h4 className="text-xl font-black mb-6 flex items-center gap-2">
-                <Settings size={24} className="text-[#FF3269]" />
+                <Settings size={24} className="text-[#0c831f]" />
                 How the Algorithm Works
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-2">
-                  <div className="text-[#FF3269] font-black text-lg">01. Spatial Indexing</div>
+                  <div className="text-[#0c831f] font-black text-lg">01. Spatial Indexing</div>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     Uses <strong>Geohashes</strong> to partition the map. Instead of O(N) search, we perform O(1) proximity lookups in Redis/Firestore.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-[#FF3269] font-black text-lg">02. A* Pathfinding</div>
+                  <div className="text-[#0c831f] font-black text-lg">02. A* Pathfinding</div>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     Calculates real-world ETA using road networks and traffic factors, not just straight-line distance.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-[#FF3269] font-black text-lg">03. Multi-Factor Scoring</div>
+                  <div className="text-[#0c831f] font-black text-lg">03. Multi-Factor Scoring</div>
                   <p className="text-gray-400 text-sm leading-relaxed">
                     Ranks riders using a weighted formula: <code>Score = w1*ETA + w2*Rating + w3*Acceptance</code>.
                   </p>
@@ -2202,7 +2202,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="px-6 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center gap-3">
-                  <div className="w-3 h-3 bg-[#FF3269] rounded-full animate-pulse" />
+                  <div className="w-3 h-3 bg-[#0c831f] rounded-full animate-pulse" />
                   <span className="text-sm font-black text-gray-900">{assignmentLogs.length} Assignments Logged</span>
                 </div>
               </div>
@@ -2216,7 +2216,7 @@ export const AdminDashboard: React.FC = () => {
                   placeholder="Search by Order ID or Rider Name..."
                   value={assignmentSearch}
                   onChange={(e) => setAssignmentSearch(e.target.value)}
-                  className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 shadow-sm transition-all"
+                  className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 shadow-sm transition-all"
                 />
               </div>
               <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
@@ -2226,7 +2226,7 @@ export const AdminDashboard: React.FC = () => {
                     onClick={() => setAssignmentStatusFilter(status)}
                     className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                       assignmentStatusFilter === status 
-                        ? 'bg-[#FF3269] text-white shadow-md' 
+                        ? 'bg-[#0c831f] text-white shadow-md' 
                         : 'text-gray-400 hover:bg-gray-50'
                     }`}
                   >
@@ -2263,7 +2263,7 @@ export const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-[#FF3269]">
+                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-black text-[#0c831f]">
                               {log.riderName[0]}
                             </div>
                             <div>
@@ -2358,7 +2358,7 @@ export const AdminDashboard: React.FC = () => {
                         toast.success('Database seeded successfully!');
                       }
                     }}
-                    className="w-full py-4 bg-[#FF3269] text-white rounded-2xl font-black shadow-sm hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#0c831f] text-white rounded-2xl font-black shadow-sm hover:bg-[#0a6c19] transition-all flex items-center justify-center gap-2"
                   >
                     <Database size={20} /> Seed Database
                   </button>
@@ -2367,7 +2367,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
                   <h4 className="text-lg font-black text-gray-900 mb-2">Admin Profile</h4>
                   <div className="flex items-center gap-4 mt-4">
-                    <div className="w-12 h-12 rounded-full bg-[#FF3269]/10 flex items-center justify-center text-[#FF3269] font-black">
+                    <div className="w-12 h-12 rounded-full bg-[#0c831f]/10 flex items-center justify-center text-[#0c831f] font-black">
                       {auth.currentUser?.email?.[0].toUpperCase()}
                     </div>
                     <div>
@@ -2394,7 +2394,7 @@ export const AdminDashboard: React.FC = () => {
                     <input 
                       type="text" 
                       defaultValue="Retail Management"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2402,12 +2402,12 @@ export const AdminDashboard: React.FC = () => {
                     <input 
                       type="email" 
                       defaultValue="contact@store.com"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black text-gray-400 uppercase ml-1">Currency</label>
-                    <select className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all">
+                    <select className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all">
                       <option value="INR">INR (₹)</option>
                       <option value="USD">USD ($)</option>
                     </select>
@@ -2441,7 +2441,7 @@ export const AdminDashboard: React.FC = () => {
                         toast.error('Failed to add category');
                       }
                     }}
-                    className="text-[#FF3269] font-black text-sm hover:underline flex items-center gap-1"
+                    className="text-[#0c831f] font-black text-sm hover:underline flex items-center gap-1"
                   >
                     <Plus size={14} /> Add New
                   </button>
@@ -2623,7 +2623,7 @@ export const AdminDashboard: React.FC = () => {
                     type="text" 
                     value={categoryForm.name || ''}
                     onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     placeholder="e.g. Fruits & Vegetables"
                   />
                 </div>
@@ -2634,7 +2634,7 @@ export const AdminDashboard: React.FC = () => {
                     type="text" 
                     value={categoryForm.imageUrl || ''}
                     onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     placeholder="https://..."
                   />
                 </div>
@@ -2645,7 +2645,7 @@ export const AdminDashboard: React.FC = () => {
                     type="number" 
                     value={categoryForm.order || 0}
                     onChange={(e) => setCategoryForm({ ...categoryForm, order: Number(e.target.value) })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                   />
                 </div>
 
@@ -2656,7 +2656,7 @@ export const AdminDashboard: React.FC = () => {
                       <label key={product.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl cursor-pointer transition-colors">
                         <div className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition-colors ${
                           categoryProducts.includes(product.id)
-                            ? 'bg-[#FF3269] border-[#FF3269]'
+                            ? 'bg-[#0c831f] border-[#0c831f]'
                             : 'border-gray-300 bg-white'
                         }`}>
                           {categoryProducts.includes(product.id) && <Check size={12} className="text-white" />}
@@ -2695,7 +2695,7 @@ export const AdminDashboard: React.FC = () => {
                 </button>
                 <button 
                   onClick={handleSaveCategory}
-                  className="flex-1 bg-[#FF3269] text-white py-4 rounded-2xl font-black shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#0c831f] text-white py-4 rounded-2xl font-black shadow-lg shadow-[#0c831f]/20 hover:bg-[#0a6c19] transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={20} /> Save
                 </button>
@@ -2743,7 +2743,7 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.name || ''}
                       onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                       placeholder="e.g. Banana Robusta"
                     />
                   </div>
@@ -2753,7 +2753,7 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.unit || ''}
                       onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                       placeholder="e.g. 500g, 1L"
                     />
                   </div>
@@ -2766,7 +2766,7 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.price || ''}
                       onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2775,7 +2775,7 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.discountPrice || ''}
                       onChange={(e) => setProductForm({ ...productForm, discountPrice: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                 </div>
@@ -2787,7 +2787,7 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.stock || ''}
                       onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2795,7 +2795,7 @@ export const AdminDashboard: React.FC = () => {
                     <select 
                       value={productForm.categoryId || ''}
                       onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 appearance-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 appearance-none transition-all"
                     >
                       <option value="" disabled>Select a category</option>
                       {categories.map(cat => (
@@ -2812,7 +2812,7 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.barcode || ''}
                       onChange={(e) => setProductForm({ ...productForm, barcode: e.target.value })}
-                      className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-mono font-bold text-gray-700 transition-all"
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-mono font-bold text-gray-700 transition-all"
                       placeholder="Scan or enter barcode"
                     />
                     <button 
@@ -2833,14 +2833,14 @@ export const AdminDashboard: React.FC = () => {
                           type="text" 
                           value={productForm.imageUrl || ''}
                           onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
                           placeholder="https://..."
                         />
                       </div>
                       <button 
                         onClick={() => generateProductImage('imageUrl')}
                         disabled={isGeneratingImage}
-                        className="bg-[#FF3269]/10 text-[#FF3269] px-4 rounded-2xl font-black hover:bg-[#FF3269]/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                        className="bg-[#0c831f]/10 text-[#0c831f] px-4 rounded-2xl font-black hover:bg-[#0c831f]/20 transition-all disabled:opacity-50 flex items-center gap-2"
                         title="Generate with AI"
                       >
                         {isGeneratingImage ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
@@ -2863,7 +2863,7 @@ export const AdminDashboard: React.FC = () => {
                         const currentImages = productForm.images || [];
                         setProductForm({ ...productForm, images: [...currentImages, ''] });
                       }}
-                      className="text-[#FF3269] text-xs font-black flex items-center gap-1 hover:underline"
+                      className="text-[#0c831f] text-xs font-black flex items-center gap-1 hover:underline"
                     >
                       <Plus size={14} /> Add Image
                     </button>
@@ -2880,13 +2880,13 @@ export const AdminDashboard: React.FC = () => {
                               newImages[idx] = e.target.value;
                               setProductForm({ ...productForm, images: newImages });
                             }}
-                            className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 text-sm transition-all"
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 text-sm transition-all"
                             placeholder="Additional image URL..."
                           />
                           <button 
                             onClick={() => generateProductImage(idx)}
                             disabled={isGeneratingImage}
-                            className="bg-[#FF3269]/10 text-[#FF3269] px-3 rounded-2xl font-black hover:bg-[#FF3269]/20 transition-all disabled:opacity-50"
+                            className="bg-[#0c831f]/10 text-[#0c831f] px-3 rounded-2xl font-black hover:bg-[#0c831f]/20 transition-all disabled:opacity-50"
                             title="Generate with AI"
                           >
                             <Sparkles size={16} />
@@ -2921,7 +2921,7 @@ export const AdminDashboard: React.FC = () => {
                 </button>
                 <button 
                   onClick={handleSaveProduct}
-                  className="flex-1 bg-[#FF3269] text-white py-4 rounded-2xl font-black shadow-sm hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#0c831f] text-white py-4 rounded-2xl font-black shadow-sm hover:bg-[#0a6c19] transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={20} /> Save Product
                 </button>

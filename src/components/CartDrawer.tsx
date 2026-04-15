@@ -308,7 +308,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             email: auth.currentUser.email || '',
           },
           theme: {
-            color: "#FF3269",
+            color: "#0c831f",
           },
         };
 
@@ -343,7 +343,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
           >
             <div className="p-6 border-b border-white/10 flex items-center justify-between bg-transparent sticky top-0">
               <div className="flex items-center gap-3">
-                <div className="bg-[#FF3269]/10 p-2 rounded-xl text-[#FF3269] backdrop-blur-md">
+                <div className="bg-[#0c831f]/10 p-2 rounded-xl text-[#0c831f] backdrop-blur-md">
                   <ShoppingBag size={24} />
                 </div>
                 <div>
@@ -366,7 +366,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   <p className="text-gray-500 font-medium">Add items to your cart to see them here.</p>
                   <button 
                     onClick={onClose}
-                    className="bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20"
+                    className="bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black hover:bg-[#0a6c19] transition-all shadow-lg shadow-[#0c831f]/20"
                   >
                     Start Shopping
                   </button>
@@ -400,7 +400,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                           <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-lg px-2 py-1 gap-3 border border-white/20">
                             <button 
                               onClick={() => item.quantity === 1 ? removeFromCart(item.id) : updateQuantity(item.id, item.quantity - 1)}
-                              className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                              className="text-gray-500 hover:text-[#0c831f] transition-colors"
                             >
                               <Minus size={14} />
                             </button>
@@ -420,7 +420,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                             </div>
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                              className="text-gray-500 hover:text-[#0c831f] transition-colors"
                             >
                               <Plus size={14} />
                             </button>
@@ -448,7 +448,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">Delivery Address</h3>
                     <button 
                       onClick={() => setShowAddressSelection(!showAddressSelection)}
-                      className="text-[#FF3269] text-xs font-bold hover:underline"
+                      className="text-[#0c831f] text-xs font-bold hover:underline"
                     >
                       {showAddressSelection ? 'Done' : 'Change'}
                     </button>
@@ -459,9 +459,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                       {userProfile?.address && (
                         <button 
                           onClick={() => setAddressType('profile')}
-                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${addressType === 'profile' ? 'border-[#FF3269] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${addressType === 'profile' ? 'border-[#0c831f] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}
                         >
-                          <div className={`p-2 rounded-lg ${addressType === 'profile' ? 'bg-[#FF3269] text-white' : 'bg-white/40 text-gray-500'}`}>
+                          <div className={`p-2 rounded-lg ${addressType === 'profile' ? 'bg-[#0c831f] text-white' : 'bg-white/40 text-gray-500'}`}>
                             <UserIcon size={16} />
                           </div>
                           <div className="text-left">
@@ -474,9 +474,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                       <button 
                         onClick={fetchCurrentLocation}
                         disabled={isLocating}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${addressType === 'current' ? 'border-[#FF3269] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${addressType === 'current' ? 'border-[#0c831f] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}
                       >
-                        <div className={`p-2 rounded-lg ${addressType === 'current' ? 'bg-[#FF3269] text-white' : 'bg-white/40 text-gray-500'}`}>
+                        <div className={`p-2 rounded-lg ${addressType === 'current' ? 'bg-[#0c831f] text-white' : 'bg-white/40 text-gray-500'}`}>
                           {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Navigation size={16} />}
                         </div>
                         <div className="text-left">
@@ -487,9 +487,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                         </div>
                       </button>
 
-                      <div className={`p-3 rounded-xl border-2 transition-all ${addressType === 'manual' ? 'border-[#FF3269] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}>
+                      <div className={`p-3 rounded-xl border-2 transition-all ${addressType === 'manual' ? 'border-[#0c831f] bg-white/60 shadow-md' : 'border-transparent bg-white/20'}`}>
                         <div className="flex items-center gap-3 mb-2">
-                          <div className={`p-2 rounded-lg ${addressType === 'manual' ? 'bg-[#FF3269] text-white' : 'bg-white/40 text-gray-500'}`}>
+                          <div className={`p-2 rounded-lg ${addressType === 'manual' ? 'bg-[#0c831f] text-white' : 'bg-white/40 text-gray-500'}`}>
                             <MapPin size={16} />
                           </div>
                           <p className="text-xs font-black text-gray-800">Manual Address</p>
@@ -507,7 +507,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     </div>
                   ) : (
                     <div className="flex items-start gap-3">
-                      <div className="bg-[#FF3269] text-white p-2 rounded-lg mt-1 shadow-lg shadow-[#FF3269]/20">
+                      <div className="bg-[#0c831f] text-white p-2 rounded-lg mt-1 shadow-lg shadow-[#0c831f]/20">
                         {addressType === 'profile' ? <UserIcon size={16} /> : addressType === 'current' ? <Navigation size={16} /> : <MapPin size={16} />}
                       </div>
                       <div className="flex-1">
@@ -535,7 +535,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                           </div>
                           <button
                             onClick={() => setAppliedOffer(appliedOffer?.id === offer.id ? null : offer)}
-                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${appliedOffer?.id === offer.id ? 'bg-green-500 text-white' : 'bg-[#FF3269]/10 text-[#FF3269] hover:bg-[#FF3269]/20'}`}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${appliedOffer?.id === offer.id ? 'bg-green-500 text-white' : 'bg-[#0c831f]/10 text-[#0c831f] hover:bg-[#0c831f]/20'}`}
                           >
                             {appliedOffer?.id === offer.id ? 'Applied' : 'Apply'}
                           </button>
@@ -551,13 +551,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setPaymentMethod('online')}
-                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'online' ? 'border-[#FF3269] bg-white/60 shadow-md text-[#FF3269]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'online' ? 'border-[#0c831f] bg-white/60 shadow-md text-[#0c831f]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
                     >
                       Online Payment
                     </button>
                     <button
                       onClick={() => setPaymentMethod('cash')}
-                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'cash' ? 'border-[#FF3269] bg-white/60 shadow-md text-[#FF3269]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'cash' ? 'border-[#0c831f] bg-white/60 shadow-md text-[#0c831f]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
                     >
                       Cash on Delivery
                     </button>
@@ -593,7 +593,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                 <button 
                   onClick={handleCheckout}
                   disabled={isProcessing || (addressType === 'manual' && !manualAddress.trim()) || (addressType === 'current' && !deliveryLocation)}
-                  className="w-full bg-[#FF3269] text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#0c831f] text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-[#0c831f]/20 hover:bg-[#0a6c19] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isProcessing ? (
                     <>

@@ -140,7 +140,7 @@ export const Home: React.FC = () => {
           <div className="container mx-auto px-4 flex items-center justify-center gap-4 py-2">
             <button 
               onClick={() => setViewMode('online')}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#0c831f] text-white shadow-lg shadow-[#0c831f]/20' : 'text-gray-500 hover:bg-white/40'}`}
             >
               <Globe size={18} /> Online Store
             </button>
@@ -201,14 +201,14 @@ export const Home: React.FC = () => {
                   {applicableOffers.map((offer, index) => {
                     const gradients = [
                       "from-purple-500 to-indigo-600",
-                      "from-[#FF3269] to-orange-500",
-                      "from-emerald-500 to-teal-600"
+                      "from-[#0c831f] to-emerald-500",
+                      "from-blue-500 to-teal-600"
                     ];
                     const gradient = gradients[index % gradients.length];
                     const shadowColors = [
                       "shadow-indigo-500/20",
-                      "shadow-[#FF3269]/20",
-                      "shadow-emerald-500/20"
+                      "shadow-[#0c831f]/20",
+                      "shadow-blue-500/20"
                     ];
                     const shadow = shadowColors[index % shadowColors.length];
 
@@ -236,12 +236,12 @@ export const Home: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="rounded-3xl overflow-hidden shadow-xl bg-[#FF3269] p-8 text-white flex flex-col justify-center relative group"
+              className="rounded-3xl overflow-hidden shadow-xl bg-[#f8cb46] p-8 text-gray-900 flex flex-col justify-center relative group"
             >
               <div className="relative z-10">
-                <h2 className="text-4xl font-black mb-4 leading-tight">Groceries delivered in <br/> <span className="text-yellow-300">10 Minutes</span></h2>
-                <p className="text-white/80 font-medium mb-6">Fresh fruits, vegetables, dairy & more at your doorstep.</p>
-                <button className="bg-white text-[#FF3269] px-8 py-3 rounded-xl font-black hover:bg-yellow-300 transition-colors">Shop Now</button>
+                <h2 className="text-4xl font-black mb-4 leading-tight">Groceries delivered in <br/> <span className="text-[#0c831f]">10 Minutes</span></h2>
+                <p className="text-gray-800/80 font-medium mb-6">Fresh fruits, vegetables, dairy & more at your doorstep.</p>
+                <button className="bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black hover:bg-[#0a6c19] transition-colors">Shop Now</button>
               </div>
               <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-20 group-hover:scale-110 transition-transform duration-700">
                 <img src="https://cdn.zeptonow.com/production///tr:w-640,ar-640-640,pr-true,f-auto,q-80/inventory/banner/06020c64-071c-438e-8913-64998811d333.png" alt="" className="w-full h-full object-contain" />
@@ -251,12 +251,12 @@ export const Home: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="rounded-3xl overflow-hidden shadow-xl bg-yellow-400 p-8 text-gray-900 flex flex-col justify-center relative group"
+              className="rounded-3xl overflow-hidden shadow-xl bg-gray-900 p-8 text-white flex flex-col justify-center relative group"
             >
               <div className="relative z-10">
-                <h2 className="text-4xl font-black mb-4 leading-tight">Get <span className="text-[#FF3269]">50% OFF</span> on <br/> your first order</h2>
-                <p className="text-gray-800/80 font-medium mb-6">Use code: RETAIL50. Valid on orders above ₹199.</p>
-                <button className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black hover:bg-gray-800 transition-colors">Claim Offer</button>
+                <h2 className="text-4xl font-black mb-4 leading-tight">Get <span className="text-[#f8cb46]">50% OFF</span> on <br/> your first order</h2>
+                <p className="text-white/80 font-medium mb-6">Use code: BLINKIT50. Valid on orders above ₹199.</p>
+                <button className="bg-[#f8cb46] text-gray-900 px-8 py-3 rounded-xl font-black hover:bg-yellow-300 transition-colors">Claim Offer</button>
               </div>
               <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-20 group-hover:scale-110 transition-transform duration-700">
                 <img src="https://cdn.zeptonow.com/production///tr:w-640,ar-640-640,pr-true,f-auto,q-80/inventory/banner/8014594c-8367-463e-903d-818222634351.png" alt="" className="w-full h-full object-contain" />
@@ -275,7 +275,7 @@ export const Home: React.FC = () => {
           <section className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
-                <History className="text-[#FF3269]" size={20} />
+                <History className="text-[#0c831f]" size={20} />
               </div>
               <h2 className="text-2xl font-black text-gray-800 tracking-tight">Recently Viewed</h2>
             </div>
@@ -313,7 +313,7 @@ export const Home: React.FC = () => {
                     </h2>
                     <button 
                       onClick={clearFilters}
-                      className="text-[#FF3269] font-bold hover:underline text-sm"
+                      className="text-[#0c831f] font-bold hover:underline text-sm"
                     >
                       Clear All
                     </button>
@@ -346,7 +346,7 @@ export const Home: React.FC = () => {
                   )}
                 </div>
               ) : (
-                // Grouped by Category View (Zepto Style)
+                // Grouped by Category View (BlinkIt Style)
                 <div className="space-y-10">
                   {/* Popular Products Row */}
                   {filteredProducts.filter(p => p.isPopular).length > 0 && (

@@ -49,9 +49,9 @@ const getRiderIcon = (status: string, isHovered: boolean = false) => {
 const orderIcon = (isSelected: boolean = false) => L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
-      ${isSelected ? '<div class="absolute w-12 h-12 bg-[#FF3269]/20 rounded-full animate-ping"></div>' : ''}
+      ${isSelected ? '<div class="absolute w-12 h-12 bg-[#0c831f]/20 rounded-full animate-ping"></div>' : ''}
       <div style="
-        background-color: ${isSelected ? '#FF3269' : '#9ca3af'};
+        background-color: ${isSelected ? '#0c831f' : '#9ca3af'};
         width: ${isSelected ? '40px' : '32px'};
         height: ${isSelected ? '40px' : '32px'};
         border-radius: 12px;
@@ -73,7 +73,7 @@ const orderIcon = (isSelected: boolean = false) => L.divIcon({
       <div style="
         position: absolute;
         bottom: -25px;
-        background: #FF3269;
+        background: #0c831f;
         color: white;
         padding: 2px 8px;
         border-radius: 6px;
@@ -169,7 +169,7 @@ export const RiderMap: React.FC<RiderMapProps> = ({ riders, pendingOrders = [], 
           <span className="text-[10px] font-black text-gray-600 uppercase">Busy Rider</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-lg bg-[#FF3269] rotate-45" />
+          <div className="w-3 h-3 rounded-lg bg-[#0c831f] rotate-45" />
           <span className="text-[10px] font-black text-gray-600 uppercase ml-1">Pickup (Store)</span>
         </div>
         <div className="flex items-center gap-2">
@@ -239,14 +239,14 @@ export const RiderMap: React.FC<RiderMapProps> = ({ riders, pendingOrders = [], 
             >
               <Popup>
                 <div className="p-1">
-                  <p className={`font-black ${isSelected ? 'text-[#FF3269]' : 'text-gray-600'}`}>
+                  <p className={`font-black ${isSelected ? 'text-[#0c831f]' : 'text-gray-600'}`}>
                     Pickup for #{order.id.slice(-6)}
                   </p>
                   <p className="text-[10px] font-bold text-gray-400 truncate max-w-[150px]">
                     {order.deliveryAddress}
                   </p>
                   {isSelected && (
-                    <p className="text-[10px] font-black text-[#FF3269] uppercase mt-1">Currently Matching</p>
+                    <p className="text-[10px] font-black text-[#0c831f] uppercase mt-1">Currently Matching</p>
                   )}
                 </div>
               </Popup>
@@ -280,7 +280,7 @@ export const RiderMap: React.FC<RiderMapProps> = ({ riders, pendingOrders = [], 
                 [selectedOrder.pickupLocation.lat, selectedOrder.pickupLocation.lng]
               ]}
               pathOptions={{ 
-                color: '#FF3269', 
+                color: '#0c831f', 
                 weight: 4, 
                 dashArray: '10, 10',
                 opacity: 0.6

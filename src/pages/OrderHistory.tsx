@@ -40,7 +40,7 @@ const TrackingProgress: React.FC<{ currentStatus: string }> = ({ currentStatus }
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${progressWidth}%` }}
-            className="h-full bg-[#FF3269] transition-all duration-500"
+            className="h-full bg-[#0c831f] transition-all duration-500"
           />
         </div>
 
@@ -52,8 +52,8 @@ const TrackingProgress: React.FC<{ currentStatus: string }> = ({ currentStatus }
           return (
             <div key={status.id} className="flex flex-col items-center gap-2 relative">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-500 relative z-10 ${
-                isCompleted ? 'bg-[#FF3269] border-[#FF3269] text-white' : 'bg-white border-gray-100 text-gray-300'
-              } ${isActive ? 'ring-4 ring-[#FF3269]/20 scale-110 shadow-lg shadow-[#FF3269]/20' : ''}`}>
+                isCompleted ? 'bg-[#0c831f] border-[#0c831f] text-white' : 'bg-white border-gray-100 text-gray-300'
+              } ${isActive ? 'ring-4 ring-[#0c831f]/20 scale-110 shadow-lg shadow-[#0c831f]/20' : ''}`}>
                 {isCompleted && !isActive ? <CheckCircle2 size={20} /> : <Icon size={20} />}
                 
                 {isActive && (
@@ -61,7 +61,7 @@ const TrackingProgress: React.FC<{ currentStatus: string }> = ({ currentStatus }
                     initial={{ scale: 0.8, opacity: 0.5 }}
                     animate={{ scale: 1.5, opacity: 0 }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
-                    className="absolute inset-0 bg-[#FF3269] rounded-full -z-10"
+                    className="absolute inset-0 bg-[#0c831f] rounded-full -z-10"
                   />
                 )}
               </div>
@@ -75,7 +75,7 @@ const TrackingProgress: React.FC<{ currentStatus: string }> = ({ currentStatus }
                   <motion.span 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-[8px] font-black text-[#FF3269] uppercase tracking-tighter mt-0.5"
+                    className="text-[8px] font-black text-[#0c831f] uppercase tracking-tighter mt-0.5"
                   >
                     Live
                   </motion.span>
@@ -168,7 +168,7 @@ export const OrderHistory: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF3269]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0c831f]"></div>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export const OrderHistory: React.FC = () => {
     <div className="min-h-screen bg-transparent py-12">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="flex items-center gap-4 mb-8 bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-sm">
-          <div className="bg-[#FF3269]/10 p-3 rounded-2xl text-[#FF3269] backdrop-blur-sm">
+          <div className="bg-[#0c831f]/10 p-3 rounded-2xl text-[#0c831f] backdrop-blur-sm">
             <Package size={32} />
           </div>
           <div>
@@ -199,7 +199,7 @@ export const OrderHistory: React.FC = () => {
             <p className="text-gray-500 font-medium mb-8">Looks like you haven't placed any orders yet. Start shopping to see your history!</p>
             <a 
               href="/"
-              className="inline-block bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20"
+              className="inline-block bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black hover:bg-[#0a6c19] transition-all shadow-lg shadow-[#0c831f]/20"
             >
               Start Shopping
             </a>
@@ -234,7 +234,7 @@ export const OrderHistory: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total</p>
-                      <p className="font-black text-[#FF3269] text-lg">₹{order.totalAmount}</p>
+                      <p className="font-black text-[#0c831f] text-lg">₹{order.totalAmount}</p>
                     </div>
                     <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-colors duration-500 backdrop-blur-sm ${
                       order.status === 'delivered' ? 'bg-green-100/50 text-green-600' :
@@ -276,7 +276,7 @@ export const OrderHistory: React.FC = () => {
                           
                           {/* Status Description Card */}
                           <div className="mt-4 p-4 bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white/40 rounded-xl flex items-center justify-center text-[#FF3269] shadow-sm backdrop-blur-sm">
+                            <div className="w-12 h-12 bg-white/40 rounded-xl flex items-center justify-center text-[#0c831f] shadow-sm backdrop-blur-sm">
                               {ORDER_STATUSES.find(s => s.id === order.status)?.icon({ size: 24 }) || <Package size={24} />}
                             </div>
                             <div>
@@ -305,7 +305,7 @@ export const OrderHistory: React.FC = () => {
                                   <path 
                                     d="M 50 180 Q 150 50 350 120" 
                                     fill="none" 
-                                    stroke="#FF3269" 
+                                    stroke="#0c831f" 
                                     strokeWidth="4" 
                                     strokeDasharray="8 8" 
                                     className="opacity-20"
@@ -326,7 +326,7 @@ export const OrderHistory: React.FC = () => {
                                          order.status === 'out_for_delivery' ? 90 : 120
                                     }}
                                     transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                                    className="absolute p-2 bg-[#FF3269] text-white rounded-full shadow-2xl z-20"
+                                    className="absolute p-2 bg-[#0c831f] text-white rounded-full shadow-2xl z-20"
                                   >
                                     <Truck size={24} />
                                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
@@ -356,7 +356,7 @@ export const OrderHistory: React.FC = () => {
                               </div>
                               <div className="flex gap-2">
                                 <button className="bg-gray-100 text-gray-800 px-4 py-2 rounded-xl text-xs font-black hover:bg-gray-200 transition-colors">Message</button>
-                                <button className="bg-[#FF3269] text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-[#E62D5E] transition-colors">Call</button>
+                                <button className="bg-[#0c831f] text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-[#0a6c19] transition-colors">Call</button>
                               </div>
                             </div>
                           </div>
@@ -370,7 +370,7 @@ export const OrderHistory: React.FC = () => {
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items</p>
                       <button 
                         onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
-                        className="text-[#FF3269] text-xs font-black flex items-center gap-1"
+                        className="text-[#0c831f] text-xs font-black flex items-center gap-1"
                       >
                         {expandedOrderId === order.id ? 'Hide Tracking' : 'Track Order'}
                         {expandedOrderId === order.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}

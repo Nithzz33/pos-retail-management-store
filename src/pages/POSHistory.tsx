@@ -107,7 +107,7 @@ export const POSHistory: React.FC = () => {
               placeholder="Search by ID, Name, Phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-white/40 backdrop-blur-md border border-white/20 rounded-xl focus:ring-2 focus:ring-[#0c831f] outline-none font-bold text-sm"
             />
           </div>
         </div>

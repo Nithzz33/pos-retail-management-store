@@ -15,7 +15,7 @@ export const printInvoice = (data: Sale | Order) => {
         <style>
           body { font-family: 'Inter', sans-serif; padding: 40px; color: #1a1a1a; }
           .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; }
-          .logo { font-size: 24px; font-weight: 900; color: #FF3269; margin-bottom: 5px; }
+          .logo { font-size: 24px; font-weight: 900; color: #0c831f; margin-bottom: 5px; }
           .info { display: flex; justify-content: space-between; margin-bottom: 40px; font-size: 14px; }
           .info div { flex: 1; }
           .info .right { text-align: right; }
@@ -24,7 +24,7 @@ export const printInvoice = (data: Sale | Order) => {
           td { padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
           .totals { text-align: right; }
           .totals div { margin-bottom: 10px; font-size: 14px; }
-          .totals .grand-total { font-size: 20px; font-weight: 900; color: #FF3269; margin-top: 20px; border-top: 2px solid #f0f0f0; padding-top: 10px; }
+          .totals .grand-total { font-size: 20px; font-weight: 900; color: #0c831f; margin-top: 20px; border-top: 2px solid #f0f0f0; padding-top: 10px; }
           .footer { text-align: center; margin-top: 60px; color: #9ca3af; font-size: 12px; }
           @media print {
             body { padding: 0; }

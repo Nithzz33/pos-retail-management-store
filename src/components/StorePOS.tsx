@@ -134,7 +134,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
         contact: customerPhone
       },
       theme: {
-        color: "#FF3269"
+        color: "#0c831f"
       }
     };
     
@@ -192,7 +192,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                 }
               }}
               placeholder="Search by name or barcode..." 
-              className="w-full pl-12 pr-4 py-3 bg-white/40 backdrop-blur-sm border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+              className="w-full pl-12 pr-4 py-3 bg-white/40 backdrop-blur-sm border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#0c831f] outline-none font-bold text-gray-700"
             />
           </div>
           <button 
@@ -204,7 +204,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
           {posCart.length > 0 && (
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="bg-[#FF3269] text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all relative"
+              className="bg-[#0c831f] text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-[#0c831f]/20 hover:bg-[#0a6c19] transition-all relative"
             >
               <ShoppingCart size={20} />
               <span>View Cart</span>
@@ -222,7 +222,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
               <button 
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 hover:border-[#FF3269] hover:shadow-lg transition-all text-left group"
+                className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 hover:border-[#0c831f] hover:shadow-lg transition-all text-left group"
               >
                 <div className="aspect-square bg-white/40 rounded-xl mb-3 overflow-hidden backdrop-blur-sm">
                   <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
@@ -234,7 +234,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                     Stock: {product.stock}
                   </p>
                 </div>
-                <p className="text-lg font-black text-[#FF3269] mt-1">₹{product.discountPrice || product.price}</p>
+                <p className="text-lg font-black text-[#0c831f] mt-1">₹{product.discountPrice || product.price}</p>
               </button>
             ))}
         </div>
@@ -260,7 +260,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
             >
               <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/40 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#FF3269] text-white rounded-xl flex items-center justify-center shadow-lg shadow-[#FF3269]/20">
+                  <div className="w-10 h-10 bg-[#0c831f] text-white rounded-xl flex items-center justify-center shadow-lg shadow-[#0c831f]/20">
                     <ShoppingCart size={20} />
                   </div>
                   <div>
@@ -295,7 +295,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
               <div className="p-6 border-b border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-black text-gray-400 uppercase tracking-wider">Customer Details</p>
-                  <button className="text-[#FF3269] text-[10px] font-black hover:underline uppercase">Search Customer</button>
+                  <button className="text-[#0c831f] text-[10px] font-black hover:underline uppercase">Search Customer</button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -304,7 +304,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                       placeholder="Name" 
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/10 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#FF3269] outline-none"
+                      className="w-full px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/10 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#0c831f] outline-none"
                     />
                   </div>
                   <div className="space-y-1">
@@ -313,7 +313,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                       placeholder="Phone" 
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/10 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#FF3269] outline-none"
+                      className="w-full px-4 py-2 bg-white/40 backdrop-blur-sm border border-white/10 rounded-xl text-sm font-bold focus:ring-2 focus:ring-[#0c831f] outline-none"
                     />
                   </div>
                 </div>
@@ -344,7 +344,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                               Stock: {latestProduct?.stock || 0}
                             </span>
                           </div>
-                          <p className="text-sm font-black text-[#FF3269] mt-1">₹{item.product.discountPrice || item.product.price}</p>
+                          <p className="text-sm font-black text-[#0c831f] mt-1">₹{item.product.discountPrice || item.product.price}</p>
                           {isOverStock && (
                             <p className="text-[10px] font-black text-red-500 mt-1 uppercase tracking-tighter">Exceeds available stock!</p>
                           )}
@@ -360,7 +360,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                                     setPosCart(posCart.filter(it => it.product.id !== item.product.id));
                                   }
                                 }} 
-                                className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                                className="text-gray-500 hover:text-[#0c831f] transition-colors"
                               >
                                 <Minus size={14} />
                               </button>
@@ -373,7 +373,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                                   }
                                   setPosCart(posCart.map(it => it.product.id === item.product.id ? { ...it, quantity: it.quantity + 1 } : it));
                                 }} 
-                                className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                                className="text-gray-500 hover:text-[#0c831f] transition-colors"
                               >
                                 <Plus size={14} />
                               </button>
@@ -409,12 +409,12 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                       type="number" 
                       value={discount}
                       onChange={(e) => setDiscount(Number(e.target.value))}
-                      className="w-24 px-2 py-1 bg-white/40 backdrop-blur-sm border border-white/10 rounded-lg text-right font-black text-[#FF3269] focus:ring-2 focus:ring-[#FF3269] outline-none"
+                      className="w-24 px-2 py-1 bg-white/40 backdrop-blur-sm border border-white/10 rounded-lg text-right font-black text-[#0c831f] focus:ring-2 focus:ring-[#0c831f] outline-none"
                     />
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-white/10">
                     <span className="text-gray-900 font-black text-lg">Total Amount</span>
-                    <span className="text-3xl font-black text-[#FF3269]">₹{totalAmount.toFixed(2)}</span>
+                    <span className="text-3xl font-black text-[#0c831f]">₹{totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -458,11 +458,11 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-8 right-28 bg-[#FF3269] text-white p-5 rounded-full shadow-2xl z-50 flex items-center gap-3 group"
+          className="fixed bottom-8 right-28 bg-[#0c831f] text-white p-5 rounded-full shadow-2xl z-50 flex items-center gap-3 group"
         >
           <div className="relative">
             <ShoppingCart size={28} />
-            <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#FF3269]">
+            <span className="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#0c831f]">
               {posCart.reduce((sum, item) => sum + item.quantity, 0)}
             </span>
           </div>

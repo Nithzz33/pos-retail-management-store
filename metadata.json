@@ -1,7 +1,5 @@
 {
-  "name": "Retail Management Store",
-  "description": "A high-performance quick commerce platform for retail management, featuring real-time cart management, product categories, and a seamless checkout experience.",
-  "requestFramePermissions": ["geolocation"]
-  "requestFramePermissions": ["camera"]
-  "requestFramePermissions": ["usb"]
+  "name": "BlinkIt Clone",
+  "description": "A high-performance quick commerce platform clone of BlinkIt, featuring real-time cart management, product categories, and a seamless checkout experience.",
+  "requestFramePermissions": ["geolocation", "camera", "usb"]
 }

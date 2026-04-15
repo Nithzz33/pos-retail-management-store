@@ -3,14 +3,14 @@ import { collection, addDoc, getDocs, query, limit, deleteDoc, doc, updateDoc, w
 import { geohashForLocation } from 'geofire-common';
 
 const categories: any[] = [
-  { id: 'cat1', name: 'Fresh Vegetables', icon: 'Carrot', color: 'bg-green-100 text-green-600' },
-  { id: 'cat2', name: 'Fresh Fruits', icon: 'Apple', color: 'bg-red-100 text-red-600' },
-  { id: 'cat3', name: 'Dairy & Eggs', icon: 'Milk', color: 'bg-blue-100 text-blue-600' },
-  { id: 'cat4', name: 'Bakery', icon: 'Croissant', color: 'bg-amber-100 text-amber-600' },
-  { id: 'cat5', name: 'Snacks & Beverages', icon: 'Coffee', color: 'bg-purple-100 text-purple-600' },
-  { id: 'cat6', name: 'Meat & Seafood', icon: 'Fish', color: 'bg-rose-100 text-rose-600' },
-  { id: 'cat7', name: 'Pantry Staples', icon: 'Wheat', color: 'bg-yellow-100 text-yellow-600' },
-  { id: 'cat8', name: 'Household', icon: 'Sparkles', color: 'bg-teal-100 text-teal-600' }
+  { id: 'cat1', name: 'Fresh Vegetables', icon: 'Carrot', color: 'bg-green-100 text-green-600', imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat2', name: 'Fresh Fruits', icon: 'Apple', color: 'bg-red-100 text-red-600', imageUrl: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat3', name: 'Dairy & Eggs', icon: 'Milk', color: 'bg-blue-100 text-blue-600', imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat4', name: 'Bakery', icon: 'Croissant', color: 'bg-amber-100 text-amber-600', imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat5', name: 'Snacks & Beverages', icon: 'Coffee', color: 'bg-purple-100 text-purple-600', imageUrl: 'https://images.unsplash.com/photo-1599598425947-33002629ee98?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat6', name: 'Meat & Seafood', icon: 'Fish', color: 'bg-rose-100 text-rose-600', imageUrl: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat7', name: 'Pantry Staples', icon: 'Wheat', color: 'bg-yellow-100 text-yellow-600', imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=200' },
+  { id: 'cat8', name: 'Household', icon: 'Sparkles', color: 'bg-teal-100 text-teal-600', imageUrl: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&q=80&w=200' }
 ];
 
 const productBases: any[] = [
