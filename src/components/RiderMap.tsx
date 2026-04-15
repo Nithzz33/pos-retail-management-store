@@ -21,7 +21,7 @@ const getRiderIcon = (status: string, isHovered: boolean = false) => {
   const size = isHovered ? 40 : 32;
   const iconSize = isHovered ? 24 : 18;
   
-  return new L.DivIcon({
+  return L.divIcon({
     html: `
       <div style="
         background-color: ${color};
@@ -46,7 +46,7 @@ const getRiderIcon = (status: string, isHovered: boolean = false) => {
   });
 };
 
-const orderIcon = (isSelected: boolean = false) => new L.DivIcon({
+const orderIcon = (isSelected: boolean = false) => L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
       ${isSelected ? '<div class="absolute w-12 h-12 bg-[#FF3269]/20 rounded-full animate-ping"></div>' : ''}
@@ -91,7 +91,7 @@ const orderIcon = (isSelected: boolean = false) => new L.DivIcon({
   popupAnchor: [0, -20],
 });
 
-const deliveryIcon = new L.DivIcon({
+const deliveryIcon = L.divIcon({
   html: `
     <div class="relative flex items-center justify-center">
       <div style="

@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { MatchingResult, Order } from '../../types';
+import type { MatchingResult, Order } from '../../types.ts';
 
 /**
  * Dispatch Service (WebSocket)
@@ -56,15 +56,24 @@ export class DispatchService {
 
   /**
    * Batch Dispatch Logic
-   * Sends requests to the top N riders. First acceptance wins.
+   * Sends requests to riders in batches. First acceptance wins.
    */
-  public async dispatchOrder(order: Order, riders: MatchingResult[]) {
+  public async dispatchOrder(order: Order, allRiders: MatchingResult[], batchIndex: number = 0) {
     if (!this.io) return;
 
-    console.log(`Dispatching order ${order.id} to ${riders.length} riders...`);
+    const BATCH_SIZE = 5;
+    const currentBatch = allRiders.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE);
+
+    if (currentBatch.length === 0) {
+      console.log(`Order ${order.id} failed to find a rider after all retries.`);
+      this.io?.emit('ORDER_FAILED', { orderId: order.id, reason: 'No riders available' });
+      return;
+    }
+
+    console.log(`Dispatching order ${order.id} to batch ${batchIndex + 1} (${currentBatch.length} riders)...`);
 
     // Notify Batch
-    riders.forEach(result => {
+    currentBatch.forEach(result => {
       this.io?.to(`rider_${result.riderId}`).emit('NEW_ORDER', {
         orderId: order.id,
         pickup: order.pickupLocation,
@@ -80,13 +89,14 @@ export class DispatchService {
       const dispatch = this.activeDispatches.get(order.id);
       if (dispatch) {
         this.activeDispatches.delete(order.id);
-        this.io?.emit('ORDER_TIMEOUT', { orderId: order.id });
-        console.log(`Order ${order.id} dispatch timed out.`);
-        // Retry logic would go here
+        this.io?.emit('ORDER_TIMEOUT', { orderId: order.id, batchIndex });
+        console.log(`Order ${order.id} dispatch timed out for batch ${batchIndex + 1}. Retrying next batch...`);
+        // Retry logic: dispatch to next batch
+        this.dispatchOrder(order, allRiders, batchIndex + 1);
       }
     }, 10000);
 
-    this.activeDispatches.set(order.id, { order, riders, timeout });
+    this.activeDispatches.set(order.id, { order, riders: currentBatch, timeout });
   }
 }
 

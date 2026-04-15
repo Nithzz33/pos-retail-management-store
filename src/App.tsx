@@ -13,16 +13,18 @@ export default function App() {
   return (
     <CartProvider>
       <Router>
-        <div className="min-h-screen selection:bg-[#FF3269] selection:text-white pt-24">
+        <div className="min-h-screen flex flex-col selection:bg-[#FF3269] selection:text-white">
           <Header />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/category/:categoryId" element={<CategoryProducts />} />
-            <Route path="/order-history" element={<OrderHistory />} />
-            <Route path="/pos-history" element={<POSHistory />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
+          <div className="flex-1 flex flex-col">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+              <Route path="/category/:categoryId" element={<CategoryProducts />} />
+              <Route path="/order-history" element={<OrderHistory />} />
+              <Route path="/pos-history" element={<POSHistory />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Routes>
+          </div>
           <Toaster position="bottom-right" richColors />
         </div>
       </Router>

@@ -17,6 +17,7 @@ export const POSHistory: React.FC = () => {
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(auth.currentUser);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const navigate = useNavigate();
 
   const isAdmin = user?.email === ADMIN_EMAIL;
@@ -24,13 +25,18 @@ export const POSHistory: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setIsAuthReady(true);
     });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
+    if (!isAuthReady) {
+      return;
+    }
+
     if (!user || !isAdmin) {
-      if (!loading) navigate('/');
+      navigate('/');
       return;
     }
 
@@ -64,7 +70,7 @@ export const POSHistory: React.FC = () => {
       unsubscribeProducts();
       unsubscribeSales();
     };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isAuthReady, navigate]);
 
   const filteredSales = sales.filter(sale => 
     sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||

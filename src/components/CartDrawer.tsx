@@ -19,8 +19,25 @@ declare global {
   }
 }
 
+const AnimatedPrice: React.FC<{ value: number | string, prefix?: string, className?: string }> = ({ value, prefix = '₹', className = '' }) => (
+  <span className={`relative overflow-hidden h-6 min-w-[60px] flex justify-end items-center ${className}`}>
+    <AnimatePresence mode="popLayout">
+      <motion.span
+        key={value}
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 20, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="absolute right-0"
+      >
+        {prefix}{value}
+      </motion.span>
+    </AnimatePresence>
+  </span>
+);
+
 export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
-  const { cartItems, removeFromCart, updateQuantity, totalAmount, clearCart, surgeMultiplier, surgeAmount, finalAmount } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, totalAmount, clearCart, surgeMultiplier, surgeAmount, finalAmount, deliveryFee, setDeliveryFee, riderEarnings, adminEarnings, paymentMethod, setPaymentMethod } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [addressType, setAddressType] = useState<'profile' | 'current' | 'manual'>('profile');
@@ -28,7 +45,66 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   const [deliveryLocation, setDeliveryLocation] = useState<{lat: number, lng: number} | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [showAddressSelection, setShowAddressSelection] = useState(false);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [appliedOffer, setAppliedOffer] = useState<any | null>(null);
+  const [userOrderCount, setUserOrderCount] = useState(0);
   const navigate = useNavigate();
+
+  const STORE_LOCATION = { lat: 12.9716, lng: 77.5946 };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    return R * c; // Distance in km
+  };
+
+  useEffect(() => {
+    let loc = deliveryLocation;
+    if (addressType === 'profile') {
+      loc = { lat: 12.9716, lng: 77.5946 }; // Default to Bangalore if profile
+    }
+
+    if (loc) {
+      const distance = calculateDistance(STORE_LOCATION.lat, STORE_LOCATION.lng, loc.lat, loc.lng);
+      const fee = Math.round(20 + (distance * 10)); // Base 20 + 10/km
+      setDeliveryFee(fee);
+    } else {
+      setDeliveryFee(20);
+    }
+  }, [deliveryLocation, addressType, setDeliveryFee]);
+
+  useEffect(() => {
+    import('firebase/firestore').then(({ collection, onSnapshot, query, where, getDocs }) => {
+      const unsubOffers = onSnapshot(query(collection(db, 'offers'), where('isActive', '==', true)), (snapshot) => {
+        const offersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setOffers(offersData);
+      });
+
+      if (auth.currentUser) {
+        getDocs(query(collection(db, 'orders'), where('userId', '==', auth.currentUser.uid)))
+          .then(snap => setUserOrderCount(snap.size))
+          .catch(console.error);
+      }
+
+      return () => unsubOffers();
+    });
+  }, []);
+
+  const applicableOffers = offers.filter(offer => {
+    if (offer.targetAudience === 'all') return true;
+    if (offer.targetAudience === 'first_order' && userOrderCount === 0) return true;
+    if (offer.targetAudience === 'loyal_customer' && userOrderCount > 5) return true;
+    return false;
+  });
+
+  const discountAmount = appliedOffer ? (appliedOffer.discountType === 'percentage' ? (finalAmount * appliedOffer.discountValue / 100) : appliedOffer.discountValue) : 0;
+  const totalWithDelivery = Math.max(0, finalAmount + deliveryFee - discountAmount);
 
   useEffect(() => {
     if (auth.currentUser) {
@@ -110,32 +186,76 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
     setIsProcessing(true);
 
     try {
-      // 1. Create order on server
-      const response = await fetch('/api/razorpay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: totalAmount,
-          currency: 'INR',
-        }),
-      });
-
-      const orderData = await response.json();
-
-      // 3. Handle success
-      const handler = async (response: any) => {
-        try {
-          const batch = writeBatch(db);
-          
-          // Update stock for each product
-          for (const item of cartItems) {
-            if (item.product) {
-              const productRef = doc(db, 'products', item.productId);
-              batch.update(productRef, {
-                stock: increment(-item.quantity)
-              });
-            }
+      if (paymentMethod === 'cash') {
+        const batch = writeBatch(db);
+        
+        // Update stock for each product
+        for (const item of cartItems) {
+          if (item.product) {
+            const productRef = doc(db, 'products', item.productId);
+            batch.update(productRef, {
+              stock: increment(-item.quantity)
+            });
           }
+        }
+
+        // Save order to Firestore
+        await addDoc(collection(db, 'orders'), {
+          userId: auth.currentUser?.uid,
+          items: cartItems.map(item => ({
+            productId: item.productId,
+            name: item.product?.name || 'Unknown Product',
+            price: item.product?.discountPrice || item.product?.price || 0,
+            quantity: item.quantity
+          })),
+          totalAmount: totalWithDelivery,
+          surgeMultiplier,
+          surgeAmount,
+          deliveryFee,
+          riderEarnings,
+          adminEarnings,
+          discountAmount,
+          appliedOfferId: appliedOffer?.id || null,
+          status: 'placed',
+          paymentMethod: 'cash',
+          deliveryAddress: finalAddress,
+          deliveryLocation: deliveryLocation || (addressType === 'profile' ? { lat: 12.9716, lng: 77.5946 } : null), // Default to Bangalore if profile
+          createdAt: serverTimestamp(),
+        });
+
+        await batch.commit();
+
+        toast.success('Order placed successfully!');
+        await clearCart();
+        onClose();
+        navigate('/order-history');
+      } else {
+        // 1. Create order on server
+        const response = await fetch('/api/razorpay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: totalWithDelivery,
+            currency: 'INR',
+          }),
+        });
+
+        const orderData = await response.json();
+
+        // 3. Handle success
+        const handler = async (response: any) => {
+          try {
+            const batch = writeBatch(db);
+            
+            // Update stock for each product
+            for (const item of cartItems) {
+              if (item.product) {
+                const productRef = doc(db, 'products', item.productId);
+                batch.update(productRef, {
+                  stock: increment(-item.quantity)
+                });
+              }
+            }
 
             // Save order to Firestore
             await addDoc(collection(db, 'orders'), {
@@ -146,10 +266,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                 price: item.product?.discountPrice || item.product?.price || 0,
                 quantity: item.quantity
               })),
-              totalAmount: finalAmount,
+              totalAmount: totalWithDelivery,
               surgeMultiplier,
               surgeAmount,
+              deliveryFee,
+              riderEarnings,
+              adminEarnings,
+              discountAmount,
+              appliedOfferId: appliedOffer?.id || null,
               status: 'placed',
+              paymentMethod: 'online',
               paymentId: response.razorpay_payment_id,
               razorpayOrderId: response.razorpay_order_id,
               deliveryAddress: finalAddress,
@@ -157,40 +283,41 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               createdAt: serverTimestamp(),
             });
 
-          await batch.commit();
+            await batch.commit();
 
-          toast.success('Order placed successfully!');
-          await clearCart();
-          onClose();
-          navigate('/order-history');
-        } catch (error) {
-          handleFirestoreError(error, OperationType.CREATE, 'orders');
-          toast.error('Payment successful but failed to save order. Please contact support.');
-        }
-      };
+            toast.success('Order placed successfully!');
+            await clearCart();
+            onClose();
+            navigate('/order-history');
+          } catch (error) {
+            handleFirestoreError(error, OperationType.CREATE, 'orders');
+            toast.error('Payment successful but failed to save order. Please contact support.');
+          }
+        };
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SOQbAh2VaZaTAd",
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Retail Management Store",
-        description: "Order Payment",
-        order_id: orderData.id,
-        handler,
-        prefill: {
-          name: auth.currentUser.displayName || '',
-          email: auth.currentUser.email || '',
-        },
-        theme: {
-          color: "#FF3269",
-        },
-      };
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SOQbAh2VaZaTAd",
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: "Retail Management Store",
+          description: "Order Payment",
+          order_id: orderData.id,
+          handler,
+          prefill: {
+            name: auth.currentUser.displayName || '',
+            email: auth.currentUser.email || '',
+          },
+          theme: {
+            color: "#FF3269",
+          },
+        };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      toast.error('Failed to initiate checkout. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -245,48 +372,71 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               ) : (
-                cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 group bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm hover:shadow-md transition-all">
-                    <div className="w-20 h-20 bg-white/40 rounded-xl overflow-hidden flex-shrink-0 border border-white/20">
-                      <img 
-                        src={item.product?.imageUrl} 
-                        alt={item.product?.name} 
-                        className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div>
-                        <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.product?.name}</h4>
-                        <p className="text-xs text-gray-500 font-medium">{item.product?.unit}</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-lg px-2 py-1 gap-3 border border-white/20">
-                          <button 
-                            onClick={() => item.quantity === 1 ? removeFromCart(item.id) : updateQuantity(item.id, item.quantity - 1)}
-                            className="text-gray-500 hover:text-[#FF3269] transition-colors"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="font-bold text-sm min-w-[12px] text-center">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="text-gray-500 hover:text-[#FF3269] transition-colors"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                        <span className="font-black text-gray-900">₹{(item.product?.discountPrice || item.product?.price || 0) * item.quantity}</span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => removeFromCart(item.id)}
-                      className="p-2 text-gray-300 hover:text-red-500 transition-colors self-start"
+                <AnimatePresence mode="popLayout">
+                  {cartItems.map((item) => (
+                    <motion.div 
+                      key={item.id} 
+                      layout
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                      className="flex gap-4 group bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm hover:shadow-md transition-all"
                     >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                ))
+                      <div className="w-20 h-20 bg-white/40 rounded-xl overflow-hidden flex-shrink-0 border border-white/20">
+                        <img 
+                          src={item.product?.imageUrl} 
+                          alt={item.product?.name} 
+                          className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{item.product?.name}</h4>
+                          <p className="text-xs text-gray-500 font-medium">{item.product?.unit}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center bg-white/40 backdrop-blur-sm rounded-lg px-2 py-1 gap-3 border border-white/20">
+                            <button 
+                              onClick={() => item.quantity === 1 ? removeFromCart(item.id) : updateQuantity(item.id, item.quantity - 1)}
+                              className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <div className="min-w-[12px] text-center relative overflow-hidden h-5 flex items-center justify-center">
+                              <AnimatePresence mode="popLayout">
+                                <motion.span 
+                                  key={item.quantity}
+                                  initial={{ y: -20, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  exit={{ y: 20, opacity: 0 }}
+                                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                  className="font-bold text-sm absolute"
+                                >
+                                  {item.quantity}
+                                </motion.span>
+                              </AnimatePresence>
+                            </div>
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="text-gray-500 hover:text-[#FF3269] transition-colors"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                          <AnimatedPrice value={(item.product?.discountPrice || item.product?.price || 0) * item.quantity} className="font-black text-gray-900" />
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="p-2 text-gray-300 hover:text-red-500 transition-colors self-start"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
             </div>
 
@@ -372,26 +522,72 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
+                {/* Offers Section */}
+                {applicableOffers.length > 0 && (
+                  <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 space-y-3 border border-white/20">
+                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">Available Offers</h3>
+                    <div className="space-y-2">
+                      {applicableOffers.map(offer => (
+                        <div key={offer.id} className="flex items-center justify-between bg-white/40 p-3 rounded-xl">
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">{offer.title}</p>
+                            <p className="text-[10px] font-medium text-gray-500">{offer.code}</p>
+                          </div>
+                          <button
+                            onClick={() => setAppliedOffer(appliedOffer?.id === offer.id ? null : offer)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${appliedOffer?.id === offer.id ? 'bg-green-500 text-white' : 'bg-[#FF3269]/10 text-[#FF3269] hover:bg-[#FF3269]/20'}`}
+                          >
+                            {appliedOffer?.id === offer.id ? 'Applied' : 'Apply'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Payment Method Selection */}
+                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 space-y-3 border border-white/20">
+                  <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">Payment Method</h3>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setPaymentMethod('online')}
+                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'online' ? 'border-[#FF3269] bg-white/60 shadow-md text-[#FF3269]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                    >
+                      Online Payment
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('cash')}
+                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all border-2 ${paymentMethod === 'cash' ? 'border-[#FF3269] bg-white/60 shadow-md text-[#FF3269]' : 'border-transparent bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                    >
+                      Cash on Delivery
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm font-bold text-gray-500">
                     <span>Item Total</span>
-                    <span className="text-gray-900">₹{totalAmount}</span>
+                    <AnimatedPrice value={totalAmount} className="text-gray-900" />
                   </div>
-                  {surgeMultiplier > 1 && (
-                    <div className="flex justify-between text-sm font-bold text-amber-600">
-                      <div className="flex items-center gap-1">
-                        <span>Surge Pricing ({surgeMultiplier}x)</span>
-                      </div>
-                      <span>₹{surgeAmount.toFixed(2)}</span>
+                  <div className="flex justify-between text-sm font-bold text-amber-600">
+                    <div className="flex items-center gap-1">
+                      <span>Surge Pricing ({surgeMultiplier}x)</span>
                     </div>
-                  )}
+                    <AnimatedPrice value={surgeAmount.toFixed(2)} />
+                  </div>
                   <div className="flex justify-between text-sm font-bold text-gray-500">
                     <span>Delivery Fee</span>
-                    <span className="text-green-600">FREE</span>
+                    <AnimatedPrice value={deliveryFee} className="text-gray-900" />
                   </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm font-bold text-green-600">
+                      <span>Discount ({appliedOffer?.code})</span>
+                      <AnimatedPrice value={discountAmount.toFixed(2)} prefix="-₹" />
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-black text-gray-900 pt-2 border-t border-dashed border-gray-200">
                     <span>Grand Total</span>
-                    <span>₹{finalAmount.toFixed(2)}</span>
+                    <AnimatedPrice value={totalWithDelivery.toFixed(2)} />
                   </div>
                 </div>
                 <button 

@@ -7,9 +7,9 @@ import shortid from "shortid";
 import dotenv from "dotenv";
 import { Server as SocketServer } from "socket.io";
 import { createServer as createHttpServer } from "http";
-import { surgeService } from "./src/server/services/surgeService";
-import { matchingService } from "./src/server/services/matchingService";
-import { dispatchService } from "./src/server/services/dispatchService";
+import { surgeService } from "./src/server/services/surgeService.ts";
+import { matchingService } from "./src/server/services/matchingService.ts";
+import { dispatchService } from "./src/server/services/dispatchService.ts";
 
 dotenv.config();
 

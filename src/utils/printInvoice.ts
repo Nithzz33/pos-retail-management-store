@@ -2,9 +2,6 @@ import { Sale, Order } from '../types';
 import { format } from 'date-fns';
 
 export const printInvoice = (data: Sale | Order) => {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
-
   const isSale = 'type' in data && data.type === 'store';
   const items = data.items;
   const total = data.totalAmount;
@@ -88,17 +85,33 @@ export const printInvoice = (data: Sale | Order) => {
           <p>Thank you for shopping with us!</p>
           <p>This is a computer generated invoice.</p>
         </div>
-
-        <script>
-          window.onload = () => {
-            window.print();
-            // window.close(); // Optional: close after print
-          };
-        </script>
       </body>
     </html>
   `;
 
-  printWindow.document.write(html);
-  printWindow.document.close();
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentWindow?.document;
+  if (iframeDoc) {
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
+    
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      }, 500);
+    };
+  }
 };

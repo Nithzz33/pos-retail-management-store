@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Package, ChevronRight, Clock, MapPin, CheckCircle2, Truck, Navigation, Home, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { printInvoice } from '../utils/printInvoice';
 
 const ORDER_STATUSES = [
   { id: 'placed', label: 'Order Placed', icon: Package },
@@ -95,10 +96,12 @@ export const OrderHistory: React.FC = () => {
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [user, setUser] = useState(auth.currentUser);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setIsAuthReady(true);
     });
     return () => unsubscribe();
   }, []);
@@ -129,6 +132,10 @@ export const OrderHistory: React.FC = () => {
       setProducts(prods);
     });
 
+    if (!isAuthReady) {
+      return () => unsubscribeProducts();
+    }
+
     if (!user) {
       setLoading(false);
       return () => unsubscribeProducts();
@@ -156,7 +163,7 @@ export const OrderHistory: React.FC = () => {
       unsubscribeProducts();
       unsubscribeOrders();
     };
-  }, [user]);
+  }, [user, isAuthReady]);
 
   if (loading) {
     return (
@@ -395,12 +402,21 @@ export const OrderHistory: React.FC = () => {
                           </div>
                         );
                       })}
+                      {order.deliveryFee !== undefined && (
+                        <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-200">
+                          <span className="font-bold text-gray-500">Delivery Fee</span>
+                          <span className="font-black text-gray-800">₹{order.deliveryFee}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 flex gap-3">
-                  <button className="flex-1 py-3 border-2 border-gray-100 rounded-xl font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => printInvoice(order)}
+                    className="flex-1 py-3 border-2 border-gray-100 rounded-xl font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all flex items-center justify-center gap-2"
+                  >
                     View Invoice <ChevronRight size={18} />
                   </button>
                   

@@ -2,54 +2,66 @@ import { db, handleFirestoreError, OperationType } from './firebase';
 import { collection, addDoc, getDocs, query, limit, deleteDoc, doc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { geohashForLocation } from 'geofire-common';
 
-const categories = [
-  { name: "Fruits & Vegetables", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/06020c64-071c-438e-8913-64998811d333.png", order: 1 },
-  { name: "Dairy, Bread & Eggs", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/8014594c-8367-463e-903d-818222634351.png", order: 2 },
-  { name: "Personal Care", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/87060c64-071c-438e-8913-64998811d333.png", order: 3 },
-  { name: "Study Materials", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/96d0879c-9c0b-468a-9214-7e889311634b.png", order: 4 },
-  { name: "Snacks & Munchies", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/26f0490b-163e-463f-9a43-85511b012345.png", order: 5 },
-  { name: "Beverages", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/7014594c-8367-463e-903d-818222634351.png", order: 6 },
-  { name: "Household Essentials", imageUrl: "https://cdn.zeptonow.com/production///tr:w-160,ar-160-160,pr-true,f-auto,q-80/inventory/banner/8014594c-8367-463e-903d-818222634351.png", order: 7 },
+const categories: any[] = [
+  { id: 'cat1', name: 'Fresh Vegetables', icon: 'Carrot', color: 'bg-green-100 text-green-600' },
+  { id: 'cat2', name: 'Fresh Fruits', icon: 'Apple', color: 'bg-red-100 text-red-600' },
+  { id: 'cat3', name: 'Dairy & Eggs', icon: 'Milk', color: 'bg-blue-100 text-blue-600' },
+  { id: 'cat4', name: 'Bakery', icon: 'Croissant', color: 'bg-amber-100 text-amber-600' },
+  { id: 'cat5', name: 'Snacks & Beverages', icon: 'Coffee', color: 'bg-purple-100 text-purple-600' },
+  { id: 'cat6', name: 'Meat & Seafood', icon: 'Fish', color: 'bg-rose-100 text-rose-600' },
+  { id: 'cat7', name: 'Pantry Staples', icon: 'Wheat', color: 'bg-yellow-100 text-yellow-600' },
+  { id: 'cat8', name: 'Household', icon: 'Sparkles', color: 'bg-teal-100 text-teal-600' }
 ];
 
-const productBases = [
-  { category: "Fruits & Vegetables", items: ["Apple", "Orange", "Grapes", "Mango", "Watermelon", "Potato", "Onion", "Carrot", "Spinach", "Broccoli"] },
-  { category: "Dairy, Bread & Eggs", items: ["Milk", "Curd", "Paneer", "Cheese", "Butter", "Egg", "Brown Bread", "White Bread", "Multigrain Bread", "Yogurt"] },
-  { category: "Personal Care", items: ["Shampoo", "Conditioner", "Soap", "Face Wash", "Body Wash", "Toothpaste", "Toothbrush", "Mouthwash", "Deodorant", "Perfume"] },
-  { category: "Study Materials", items: ["Notebook", "Pen", "Pencil", "Eraser", "Sharpener", "Scale", "Marker", "Highlighter", "Glue", "Stapler"] },
-  { category: "Snacks & Munchies", items: ["Potato Chips", "Nachos", "Popcorn", "Biscuits", "Cookies", "Chocolate", "Wafers", "Namkeen", "Roasted Makhana", "Dry Fruits"] },
-  { category: "Beverages", items: ["Tea", "Coffee", "Green Tea", "Fruit Juice", "Energy Drink", "Soft Drink", "Mineral Water", "Coconut Water", "Iced Tea", "Cold Coffee"] },
-  { category: "Household Essentials", items: ["Detergent", "Dishwash Bar", "Floor Cleaner", "Toilet Cleaner", "Glass Cleaner", "Air Freshener", "Garbage Bags", "Kitchen Roll", "Toilet Paper", "Scrub Pad"] },
+const productBases: any[] = [
+  { name: 'Organic Bananas', categoryId: 'cat2', price: 60, unit: '1 kg', stock: 50, imageUrl: 'https://images.unsplash.com/photo-1571501478200-8f1b621457bd?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Fresh Milk', categoryId: 'cat3', price: 35, unit: '500 ml', stock: 100, imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Whole Wheat Bread', categoryId: 'cat4', price: 45, unit: '400 g', stock: 30, imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Potato', categoryId: 'cat1', price: 40, unit: '1 kg', stock: 200, imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Onion', categoryId: 'cat1', price: 50, unit: '1 kg', stock: 150, imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Tomato', categoryId: 'cat1', price: 30, unit: '1 kg', stock: 100, imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Eggs', categoryId: 'cat3', price: 60, unit: '6 pcs', stock: 80, imageUrl: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Chicken Breast', categoryId: 'cat6', price: 250, unit: '500 g', stock: 40, imageUrl: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Rice', categoryId: 'cat7', price: 120, unit: '1 kg', stock: 300, imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400' },
+  { name: 'Coffee Powder', categoryId: 'cat5', price: 150, unit: '100 g', stock: 60, imageUrl: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?auto=format&fit=crop&q=80&w=400' }
 ];
 
 const generateProducts = () => {
-  const generated: any[] = [];
-  productBases.forEach(base => {
-    base.items.forEach((item, index) => {
-      const price = Math.floor(Math.random() * (200 - 20 + 1)) + 20;
-      const stock = Math.floor(Math.random() * 200) + 10;
-      
-      const searchTerms = `${item.toLowerCase().replace(/\s+/g, ',')},product,whitebackground`;
-      
-      generated.push({
-        name: item,
-        price: price,
-        unit: "1 Unit",
-        imageUrl: `https://loremflickr.com/400/400/${searchTerms}?lock=${index + 200}`,
-        images: [
-          `https://loremflickr.com/400/400/${searchTerms}?lock=${index + 200}`,
-          `https://loremflickr.com/400/400/${searchTerms}?lock=${index + 300}`,
-          `https://loremflickr.com/400/400/${searchTerms}?lock=${index + 400}`,
-        ],
-        stock: stock,
-        isPopular: Math.random() > 0.7,
-        categoryName: base.category,
-        description: `High quality ${item} for your daily needs. Freshly sourced and carefully packed.`
-      });
-    });
-  });
-  return generated;
+  return productBases.map(base => ({
+    ...base,
+    barcode: Math.floor(100000000000 + Math.random() * 900000000000).toString(),
+    damagedCount: 0,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
 };
+
+export async function clearAllCategories() {
+  console.log("Starting full category cleanup...");
+  try {
+    const categoriesSnap = await getDocs(collection(db, 'categories'));
+    console.log(`Found ${categoriesSnap.size} categories to delete.`);
+    
+    let deleteBatch = writeBatch(db);
+    let count = 0;
+    for (const cDoc of categoriesSnap.docs) {
+      deleteBatch.delete(cDoc.ref);
+      count++;
+      if (count === 500) {
+        await deleteBatch.commit();
+        deleteBatch = writeBatch(db);
+        count = 0;
+      }
+    }
+    if (count > 0) await deleteBatch.commit();
+    console.log("All categories successfully removed from database.");
+    return categoriesSnap.size;
+  } catch (error) {
+    console.error("Error clearing categories:", error);
+    handleFirestoreError(error, OperationType.DELETE, 'categories');
+    throw error;
+  }
+}
 
 export async function clearAllProducts() {
   console.log("Starting full product cleanup...");
@@ -78,104 +90,53 @@ export async function clearAllProducts() {
   }
 }
 
+export async function seedCategoriesIfEmpty() {
+  try {
+    const categoriesSnap = await getDocs(query(collection(db, 'categories'), limit(1)));
+    if (categoriesSnap.empty) {
+      console.log("No categories found. Seeding default categories...");
+      const batch = writeBatch(db);
+      categories.forEach(cat => {
+        const docRef = doc(db, 'categories', cat.id);
+        batch.set(docRef, cat);
+      });
+      await batch.commit();
+      console.log("Default categories seeded successfully.");
+    }
+  } catch (error) {
+    console.error("Error seeding default categories:", error);
+  }
+}
+
 export async function seedDatabase() {
-  console.log("Starting database cleanup and seeding...");
+  console.log("Starting database cleanup...");
   
   try {
-    // 1. Handle Categories
-    console.log("Processing categories...");
-    const categoriesSnap = await getDocs(collection(db, 'categories'));
-    const categoryMap: { [key: string]: string } = {};
-    const processedNames = new Set<string>();
-
-    // Cleanup duplicates first
-    const cleanupBatch = writeBatch(db);
-    let cleanupCount = 0;
-    for (const cDoc of categoriesSnap.docs) {
-      const name = cDoc.data().name;
-      if (processedNames.has(name)) {
-        cleanupBatch.delete(cDoc.ref);
-        cleanupCount++;
-      } else {
-        processedNames.add(name);
-        categoryMap[name] = cDoc.id;
-      }
-    }
-    if (cleanupCount > 0) {
-      console.log(`Deleting ${cleanupCount} duplicate categories...`);
-      await cleanupBatch.commit();
-    }
-
-    // Seed or Update Categories in a single batch if possible
-    const catBatch = writeBatch(db);
-    const newCategoryRefs: { [name: string]: any } = {};
-
-    for (const cat of categories) {
-      if (!categoryMap[cat.name]) {
-        console.log(`Preparing to seed category: ${cat.name}`);
-        const newDocRef = doc(collection(db, 'categories'));
-        catBatch.set(newDocRef, cat);
-        newCategoryRefs[cat.name] = newDocRef;
-      } else {
-        console.log(`Preparing to update category: ${cat.name}`);
-        const docRef = doc(db, 'categories', categoryMap[cat.name]);
-        catBatch.update(docRef, { 
-          imageUrl: cat.imageUrl,
-          order: cat.order 
-        });
-      }
-    }
-    
-    console.log("Committing category changes...");
-    await catBatch.commit();
-
-    // Update categoryMap with newly created IDs
-    for (const name in newCategoryRefs) {
-      categoryMap[name] = newCategoryRefs[name].id;
-    }
+    // 1. Handle Categories (Delete ALL)
+    await clearAllCategories();
 
     // 2. Handle Products (Delete ALL)
     await clearAllProducts();
 
-    // 3. Seed New Products
+    // 3. Seed Categories and Products
+    console.log("Seeding categories and products...");
+    const categoryBatch = writeBatch(db);
+    for (const category of categories) {
+      const catRef = doc(db, 'categories', category.id);
+      categoryBatch.set(catRef, category);
+    }
+    await categoryBatch.commit();
+    console.log("Categories seeded.");
+
+    const productBatch = writeBatch(db);
     const newProducts = generateProducts();
-    console.log(`Seeding exactly ${newProducts.length} new products (10 per category)...`);
-    
-    let addBatch = writeBatch(db);
-    let addCount = 0;
-    let totalAdded = 0;
-
-    for (const prod of newProducts) {
-      const { categoryName, ...prodData } = prod;
-      const categoryId = categoryMap[categoryName];
-      
-      if (!categoryId) {
-        console.error(`CRITICAL: Category not found for product: ${prod.name} (Category: ${categoryName})`);
-        throw new Error(`Category mapping failed for ${categoryName}`);
-      }
-
-      const newDocRef = doc(collection(db, 'products'));
-      addBatch.set(newDocRef, {
-        ...prodData,
-        categoryId
-      });
-      addCount++;
-      totalAdded++;
-
-      if (addCount === 500) {
-        console.log(`Committing batch of 500 products (Total: ${totalAdded})...`);
-        await addBatch.commit();
-        addBatch = writeBatch(db);
-        addCount = 0;
-      }
+    for (const product of newProducts) {
+      const prodRef = doc(collection(db, 'products'));
+      productBatch.set(prodRef, product);
     }
-    if (addCount > 0) {
-      console.log(`Committing final batch of ${addCount} products...`);
-      await addBatch.commit();
-    }
-    
-    console.log(`Database cleanup and seeding complete! Total products seeded: ${totalAdded}`);
-    
+    await productBatch.commit();
+    console.log("Products seeded.");
+
     // 4. Seed Mock Riders
     console.log("Seeding mock riders...");
     const ridersSnap = await getDocs(collection(db, 'riders'));

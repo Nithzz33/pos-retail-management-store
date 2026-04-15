@@ -6,7 +6,8 @@ import { useCart } from '../context/CartContext';
 import { Category, Product } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CartDrawer } from './CartDrawer';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const ADMIN_EMAIL = "sainithingowda3714@gmail.com";
 
@@ -27,6 +28,7 @@ export const Header: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
@@ -95,64 +97,28 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl transition-all duration-300 rounded-full border border-white/20 ${isScrolled ? 'bg-white/70 backdrop-blur-xl shadow-2xl py-2' : 'bg-white/90 backdrop-blur-md shadow-xl py-3'}`}>
-        <div className="container mx-auto px-8 flex items-center justify-between gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-black text-[#FF3269] tracking-tighter cursor-pointer">Retail Management Store</Link>
+      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 border-b border-gray-100 ${isScrolled ? 'bg-white shadow-md py-2' : 'bg-white py-3'}`}>
+        <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 lg:gap-8">
+          {/* Logo & Location */}
+          <div className="flex items-center gap-4 lg:gap-8">
+            <Link to="/" className="text-2xl lg:text-3xl font-black text-[#FF3269] tracking-tighter cursor-pointer">
+              Zepto<span className="text-gray-800">Mart</span>
+            </Link>
             
-            {/* Categories Dropdown */}
-            <div className="hidden lg:block relative">
-              <button 
-                onMouseEnter={() => setIsCategoriesOpen(true)}
-                className="flex items-center gap-2 font-black text-gray-800 hover:text-[#FF3269] transition-colors py-2"
-              >
-                <Grid size={18} />
-                Categories
-                <ChevronDown size={14} className={`transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {isCategoriesOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    onMouseLeave={() => setIsCategoriesOpen(false)}
-                    className="absolute left-0 mt-0 w-[600px] bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 p-6 z-50 grid grid-cols-3 gap-4"
-                  >
-                    {categories.map((cat) => (
-                      <Link 
-                        key={cat.id} 
-                        to={`/category/${cat.id}`}
-                        onClick={() => setIsCategoriesOpen(false)}
-                        className="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FF3269]/5 group transition-all"
-                      >
-                        <div className="w-12 h-12 bg-gray-50 rounded-xl p-2 group-hover:bg-white transition-colors">
-                          <img src={cat.imageUrl} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                        </div>
-                        <span className="font-bold text-gray-700 group-hover:text-[#FF3269] transition-colors">{cat.name}</span>
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
             {/* Location */}
-            <div className="hidden md:flex flex-col cursor-pointer">
-              <div className="flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Delivery in 10 Mins <ChevronDown size={12} />
+            <div className="hidden md:flex flex-col cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
+              <div className="flex items-center gap-1 text-[10px] lg:text-xs font-black text-gray-800 uppercase tracking-wider">
+                Delivery in 10 Mins <ChevronDown size={14} className="text-[#FF3269]" />
               </div>
-              <div className="flex items-center gap-1 text-sm font-bold text-gray-800">
-                <MapPin size={14} className="text-[#FF3269]" />
-                Select Address
+              <div className="flex items-center gap-1 text-xs lg:text-sm font-medium text-gray-500 truncate max-w-[200px]">
+                <MapPin size={14} className="text-[#FF3269] flex-shrink-0" />
+                <span className="truncate">Select your delivery location</span>
               </div>
             </div>
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl relative" ref={searchRef}>
+          <div className="flex-1 max-w-3xl relative hidden sm:block" ref={searchRef}>
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
               {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
             </div>
@@ -162,14 +128,14 @@ export const Header: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
               placeholder='Search for "milk", "bread", "fruits"...' 
-              className="w-full bg-gray-100 border-none rounded-xl py-3 pl-12 pr-10 focus:ring-2 focus:ring-[#FF3269] transition-all outline-none text-gray-700 font-medium"
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-10 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] transition-all outline-none text-gray-700 font-medium text-sm lg:text-base"
             />
             {searchTerm && (
               <button 
                 onClick={() => setSearchTerm('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-white rounded-full p-1 shadow-sm"
               >
-                <X size={18} />
+                <X size={14} />
               </button>
             )}
 
@@ -180,7 +146,7 @@ export const Header: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden z-50"
+                  className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 max-h-[400px] overflow-y-auto"
                 >
                   {searchResults.length > 0 ? (
                     <div className="py-2">
@@ -192,14 +158,14 @@ export const Header: React.FC = () => {
                             setShowSearchResults(false);
                             setSearchTerm('');
                           }}
-                          className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group"
+                          className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
                         >
-                          <div className="w-12 h-12 bg-gray-50 rounded-lg p-1 flex-shrink-0">
+                          <div className="w-12 h-12 bg-white rounded-lg p-1 flex-shrink-0 border border-gray-100">
                             <img src={product.imageUrl} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-gray-800 text-sm truncate group-hover:text-[#FF3269] transition-colors">{product.name}</h4>
-                            <p className="text-xs text-gray-400 font-bold uppercase">{product.unit}</p>
+                            <p className="text-xs text-gray-400 font-medium">{product.unit}</p>
                           </div>
                           <div className="text-right">
                             <p className="font-black text-gray-900">₹{product.discountPrice || product.price}</p>
@@ -225,19 +191,22 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 lg:gap-6">
             {user ? (
               <div className="relative">
                 <div 
-                  className="flex items-center gap-2 cursor-pointer group" 
+                  className="flex items-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors" 
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border-2 border-transparent group-hover:border-[#FF3269] transition-all">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-200">
                     <img src={user.photoURL || ''} alt="" referrerPolicy="no-referrer" />
                   </div>
-                  <span className="hidden md:block font-bold text-gray-700 group-hover:text-[#FF3269] transition-colors flex items-center gap-1">
-                    Account <ChevronDown size={14} />
-                  </span>
+                  <div className="hidden md:block">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase block leading-none">Account</span>
+                    <span className="font-bold text-gray-700 group-hover:text-[#FF3269] transition-colors flex items-center gap-1 text-sm leading-none mt-1">
+                      {user.displayName?.split(' ')[0] || 'User'} <ChevronDown size={14} />
+                    </span>
+                  </div>
                 </div>
 
                 <AnimatePresence>
@@ -248,7 +217,7 @@ export const Header: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-48 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-xl border border-white/20 py-2 z-20"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20"
                       >
                         <Link 
                           to="/order-history" 
@@ -256,7 +225,7 @@ export const Header: React.FC = () => {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <History size={18} />
-                          Online Orders
+                          My Orders
                         </Link>
                         {isAdmin && (
                           <Link 
@@ -275,9 +244,10 @@ export const Header: React.FC = () => {
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <LayoutDashboard size={18} />
-                            Admin Panel
+                            Admin Dashboard
                           </Link>
                         )}
+                        <div className="h-px bg-gray-100 my-1"></div>
                         <button 
                           onClick={() => {
                             logout();
@@ -296,8 +266,21 @@ export const Header: React.FC = () => {
               </div>
             ) : (
               <button 
-                onClick={() => loginWithGoogle()}
-                className="font-bold text-gray-700 hover:text-[#FF3269] transition-colors"
+                onClick={async () => {
+                  try {
+                    await loginWithGoogle();
+                  } catch (error: any) {
+                    console.error("Login error:", error);
+                    if (error.code === 'auth/popup-blocked') {
+                      toast.error("Login popup blocked. Please allow popups for this site.");
+                    } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                      toast.error("Login cancelled. Please try again.");
+                    } else {
+                      toast.error("Failed to log in. Please try again.");
+                    }
+                  }
+                }}
+                className="font-bold text-gray-700 hover:text-[#FF3269] transition-colors px-4 py-2 hover:bg-gray-50 rounded-xl"
               >
                 Login
               </button>
@@ -305,20 +288,54 @@ export const Header: React.FC = () => {
 
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="relative bg-[#FF3269] text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20"
+              className="bg-[#FF3269] text-white px-4 lg:px-5 py-2.5 lg:py-3 rounded-2xl flex items-center gap-3 font-black hover:bg-[#E62D5E] transition-all shadow-lg shadow-[#FF3269]/20 hover:shadow-[#FF3269]/40 hover:-translate-y-0.5"
             >
               <ShoppingCart size={20} />
-              <span className="hidden sm:inline">Cart</span>
+              <div className="hidden sm:flex flex-col items-start leading-none">
+                <span className="text-[10px] text-white/80 uppercase tracking-wider">My Cart</span>
+                <span className="text-sm">
+                  {cartItems.length > 0 ? `₹${totalAmount}` : 'Empty'}
+                </span>
+              </div>
               {cartItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-black text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                <span className="sm:hidden absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
                   {cartItems.length}
                 </span>
               )}
             </button>
           </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        <div className="sm:hidden px-4 mt-3">
+          <div className="relative" ref={searchRef}>
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+              {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+            </div>
+            <input 
+              type="text" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
+              placeholder='Search for "milk", "bread"...' 
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] transition-all outline-none text-gray-700 font-medium text-sm"
+            />
+          </div>
+        </div>
       </header>
+      
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* Floating Admin POS Button */}
+      {isAdmin && location.pathname !== '/admin' && (
+        <button
+          onClick={() => navigate('/admin', { state: { activeTab: 'pos' } })}
+          className="fixed bottom-6 left-6 z-50 bg-gray-900 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 hover:bg-gray-800 hover:-translate-y-1 transition-all group border-4 border-white"
+        >
+          <LayoutDashboard size={24} className="text-[#FF3269]" />
+          <span className="font-black pr-2 hidden md:block group-hover:text-[#FF3269] transition-colors">Admin POS</span>
+        </button>
+      )}
     </>
   );
 };

@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { db, auth } from '../firebase';
-import { collection, onSnapshot, query, where, limit } from 'firebase/firestore';
-import { Product } from '../types';
+import { db, auth, onAuthStateChanged } from '../firebase';
+import { collection, onSnapshot, query, where, limit, getDocs } from 'firebase/firestore';
+import { Product, Offer } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryBar } from '../components/CategoryBar';
 import { CategoryNav } from '../components/CategoryNav';
 import { FilterBar } from '../components/FilterBar';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, ShoppingCart, Globe, Scan, History } from 'lucide-react';
-import { seedDatabase } from '../seed';
+import { Filter, ShoppingCart, Globe, Scan, History, Tag } from 'lucide-react';
+import { seedDatabase, seedCategoriesIfEmpty } from '../seed';
 import { StorePOS } from '../components/StorePOS';
 import { BarcodeScanner } from '../components/BarcodeScanner';
 import { AIAssistant } from '../components/AIAssistant';
@@ -19,12 +19,23 @@ const ADMIN_EMAIL = "sainithingowda3714@gmail.com";
 export const Home: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [userOrderCount, setUserOrderCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'online' | 'pos'>('online');
   const [isScanning, setIsScanning] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState<string | undefined>(undefined);
   
-  const isAdmin = auth.currentUser?.email === ADMIN_EMAIL;
+  const [user, setUser] = useState(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   // Filter States
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
@@ -33,17 +44,48 @@ export const Home: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
+    if (isAdmin) {
+      seedCategoriesIfEmpty();
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
     const q = query(collection(db, 'products'));
-    const unsub = onSnapshot(q, (snapshot) => {
+    const unsubProducts = onSnapshot(q, (snapshot) => {
       const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
       setAllProducts(prods);
       setLoading(false);
     });
 
+    const unsubOffers = onSnapshot(query(collection(db, 'offers'), where('isActive', '==', true)), (snapshot) => {
+      const offersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Offer[];
+      setOffers(offersData);
+    });
+
+    if (user) {
+      getDocs(query(collection(db, 'orders'), where('userId', '==', user.uid)))
+        .then(snap => setUserOrderCount(snap.size))
+        .catch(console.error);
+    } else {
+      setUserOrderCount(0);
+    }
+
     setRecentlyViewed(getRecentlyViewed());
 
-    return unsub;
-  }, []);
+    return () => {
+      unsubProducts();
+      unsubOffers();
+    };
+  }, [user]);
+
+  const applicableOffers = useMemo(() => {
+    return offers.filter(offer => {
+      if (offer.targetAudience === 'all') return true;
+      if (offer.targetAudience === 'first_order' && userOrderCount === 0) return true;
+      if (offer.targetAudience === 'loyal_customer' && userOrderCount > 5) return true;
+      return false;
+    });
+  }, [offers, userOrderCount]);
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
@@ -149,6 +191,45 @@ export const Home: React.FC = () => {
           />
           
           <main className="container mx-auto px-4 py-8">
+            {/* Offers Section */}
+            {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && applicableOffers.length > 0 && (
+              <section className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-black text-gray-800 tracking-tight">Top Offers For You</h2>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
+                  {applicableOffers.map((offer, index) => {
+                    const gradients = [
+                      "from-purple-500 to-indigo-600",
+                      "from-[#FF3269] to-orange-500",
+                      "from-emerald-500 to-teal-600"
+                    ];
+                    const gradient = gradients[index % gradients.length];
+                    const shadowColors = [
+                      "shadow-indigo-500/20",
+                      "shadow-[#FF3269]/20",
+                      "shadow-emerald-500/20"
+                    ];
+                    const shadow = shadowColors[index % shadowColors.length];
+
+                    return (
+                      <div key={offer.id} className={`snap-start min-w-[280px] sm:min-w-[320px] h-[160px] rounded-3xl bg-gradient-to-br ${gradient} p-6 text-white relative overflow-hidden flex-shrink-0 shadow-lg ${shadow}`}>
+                        <div className="relative z-10">
+                          <h3 className="text-3xl font-black mb-1">{offer.title}</h3>
+                          <p className="text-white/90 font-medium mb-4">{offer.description}</p>
+                          <span className="bg-white/20 px-3 py-1.5 rounded-xl font-bold text-sm backdrop-blur-md border border-white/20">Code: {offer.code}</span>
+                        </div>
+                        <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/20 rounded-full blur-3xl"></div>
+                        <div className="absolute right-4 top-4 opacity-50">
+                          <Tag size={48} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* Hero Section */}
         {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -208,23 +289,8 @@ export const Home: React.FC = () => {
           </section>
         )}
 
-        {/* Products Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black text-gray-800">
-              {priceRange || isPopularOnly || sort !== 'newest' || selectedCategories.length > 0 ? 'Filtered Products' : 'Popular Products'}
-              <span className="ml-3 text-sm font-bold text-gray-400">({filteredProducts.length} items)</span>
-            </h2>
-            {(priceRange || isPopularOnly || sort !== 'newest' || selectedCategories.length > 0) && (
-              <button 
-                onClick={clearFilters}
-                className="text-[#FF3269] font-bold hover:underline text-sm"
-              >
-                Clear All
-              </button>
-            )}
-          </div>
-
+        {/* Products Section by Category */}
+        <section className="space-y-12">
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {[...Array(6)].map((_, i) => (
@@ -237,30 +303,92 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <>
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  <AnimatePresence mode="popLayout">
-                    {filteredProducts.map(product => (
-                      <motion.div
-                        layout
-                        key={product.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ProductCard product={product} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
+              {(priceRange || isPopularOnly || sort !== 'newest' || selectedCategories.length > 0) ? (
+                // Filtered View
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-800">
+                      Filtered Products
+                      <span className="ml-3 text-sm font-bold text-gray-400">({filteredProducts.length} items)</span>
+                    </h2>
+                    <button 
+                      onClick={clearFilters}
+                      className="text-[#FF3269] font-bold hover:underline text-sm"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  {filteredProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      <AnimatePresence mode="popLayout">
+                        {filteredProducts.map(product => (
+                          <motion.div
+                            layout
+                            key={product.id}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ProductCard product={product} />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center">
+                      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Filter className="text-gray-400" size={32} />
+                      </div>
+                      <h3 className="text-xl font-black text-gray-800">No products found</h3>
+                      <p className="text-gray-500 font-medium">Try adjusting your filters to find what you're looking for.</p>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="py-20 text-center">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Filter className="text-gray-400" size={32} />
-                  </div>
-                  <h3 className="text-xl font-black text-gray-800">No products found</h3>
-                  <p className="text-gray-500 font-medium">Try adjusting your filters to find what you're looking for.</p>
+                // Grouped by Category View (Zepto Style)
+                <div className="space-y-10">
+                  {/* Popular Products Row */}
+                  {filteredProducts.filter(p => p.isPopular).length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl lg:text-2xl font-black text-gray-800">Trending Near You</h2>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                        {filteredProducts.filter(p => p.isPopular).map(product => (
+                          <div key={product.id} className="w-[160px] sm:w-[200px] flex-shrink-0">
+                            <ProductCard product={product} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Products by Category Rows */}
+                  {Array.from(new Set(filteredProducts.map(p => p.categoryId))).map(categoryId => {
+                    const categoryProducts = filteredProducts.filter(p => p.categoryId === categoryId);
+                    if (categoryProducts.length === 0) return null;
+                    
+                    // Try to find category name from the first product's categoryId
+                    // Note: We don't have categories array in Home.tsx directly, so we'll just use a generic title or fetch it if needed.
+                    // For now, we'll just show the products.
+                    return (
+                      <div key={categoryId}>
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-xl lg:text-2xl font-black text-gray-800 capitalize">
+                            {categoryId.replace(/-/g, ' ')}
+                          </h2>
+                        </div>
+                        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                          {categoryProducts.map(product => (
+                            <div key={product.id} className="w-[160px] sm:w-[200px] flex-shrink-0">
+                              <ProductCard product={product} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>

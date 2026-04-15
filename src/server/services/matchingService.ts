@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { calculateHaversineDistance, calculateETA, calculateRiderScore } from '../../utils/geoUtils';
-import { Order, Rider, MatchingResult } from '../../types';
+import { calculateHaversineDistance, calculateETA, calculateRiderScore } from '../../utils/geoUtils.ts';
+import type { Order, Rider, MatchingResult } from '../../types.ts';
 
 /**
  * Matching Service (The Brain)

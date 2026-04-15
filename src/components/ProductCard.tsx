@@ -22,9 +22,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white/40 backdrop-blur-md rounded-2xl p-3 border border-white/20 hover:shadow-xl transition-all group relative"
+      className="bg-white rounded-2xl p-3 border border-gray-100 hover:shadow-lg transition-all group relative flex flex-col h-full"
     >
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product.id}`} className="flex-1">
         <div className="aspect-square rounded-xl overflow-hidden mb-3 bg-gray-50 relative group/image">
           <ProductImageCarousel 
             images={allImages} 
@@ -34,26 +34,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         </div>
         
-        <div className="flex flex-col h-[50px] justify-start mb-2">
-          <h3 className="font-bold text-gray-800 text-sm line-clamp-2 mb-1">{product.name}</h3>
+        <div className="flex flex-col justify-start mb-2">
+          <h3 className="font-bold text-gray-800 text-sm line-clamp-2 mb-1 leading-tight">{product.name}</h3>
           <span className="text-xs text-gray-500 font-medium">{product.unit}</span>
         </div>
       </Link>
 
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center justify-between mt-auto pt-2">
         <div className="flex flex-col">
           {product.discountPrice && (
-            <span className="text-xs text-gray-400 line-through">₹{product.price}</span>
+            <span className="text-[10px] text-gray-400 line-through">₹{product.price}</span>
           )}
           <span className="font-black text-gray-900">₹{product.discountPrice || product.price}</span>
         </div>
 
         {product.stock <= 0 ? (
-          <span className="text-xs font-black text-red-500 uppercase tracking-tighter bg-red-50 px-2 py-1 rounded-md">
+          <span className="text-[10px] font-black text-red-500 uppercase tracking-tighter bg-red-50 px-2 py-1 rounded-md">
             Out of Stock
           </span>
         ) : cartItem ? (
-          <div className="flex items-center bg-[#FF3269] text-white rounded-lg px-2 py-1 gap-3">
+          <div className="flex items-center bg-[#FF3269] text-white rounded-lg px-2 py-1.5 gap-3 shadow-md shadow-[#FF3269]/20">
             <button 
               onClick={() => cartItem.quantity === 1 ? removeFromCart(cartItem.id) : updateQuantity(cartItem.id, cartItem.quantity - 1)}
               className="hover:scale-110 transition-transform"
@@ -72,9 +72,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         ) : (
           <button 
             onClick={() => addToCart(product)}
-            className="bg-white border-2 border-[#FF3269] text-[#FF3269] px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-[#FF3269] hover:text-white transition-all active:scale-95"
+            className="bg-white border border-[#FF3269] text-[#FF3269] px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-[#FF3269]/5 transition-all active:scale-95 shadow-sm"
           >
-            Add
+            ADD
           </button>
         )}
       </div>

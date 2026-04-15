@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { db, auth, handleFirestoreError, OperationType, onAuthStateChanged } from '../firebase';
 import { collection, onSnapshot, query, orderBy, updateDoc, doc, getDocs, writeBatch, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { Order, Product, Procurement, Sale, UserProfile, Category, AssignmentLog } from '../types';
+import { Order, Product, Procurement, Sale, UserProfile, Category, AssignmentLog, Offer } from '../types';
 import { Rider, riderAssignmentService, MatchingResult } from '../services/riderAssignmentService';
 import { RiderMap } from '../components/RiderMap';
 import { 
@@ -13,7 +14,7 @@ import {
   Loader2, AlertTriangle, CheckCircle, Database, MapPin,
   Clock, Truck, XCircle, ArrowUpRight, ArrowDownRight, RefreshCw,
   Scan, ShoppingCart, CreditCard, Banknote, Plus, Minus, Trash2, Sparkles,
-  Edit, Save, X, Upload, FileText, ChevronLeft, ChevronRight, Check, Square, Printer
+  Edit, Save, X, Upload, FileText, ChevronLeft, ChevronRight, Check, Square, Printer, History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -38,13 +39,23 @@ export const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [riders, setRiders] = useState<Rider[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [assignmentLogs, setAssignmentLogs] = useState<AssignmentLog[]>([]);
   const [assignmentSearch, setAssignmentSearch] = useState('');
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<'all' | 'assigned' | 'rejected' | 'completed'>('all');
   const [userSearch, setUserSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'inventory' | 'procurement' | 'pos' | 'sales' | 'customers' | 'rider-matching' | 'rider-assignment-history' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'inventory' | 'categories' | 'procurement' | 'pos' | 'sales' | 'customers' | 'offers' | 'rider-matching' | 'rider-assignment-history' | 'settings'>('overview');
   const [user, setUser] = useState(auth.currentUser);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
   
   // Rider Matching State
   const [selectedOrderForMatching, setSelectedOrderForMatching] = useState<Order | null>(null);
@@ -59,6 +70,7 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setIsAuthReady(true);
     });
     return () => unsubscribe();
   }, []);
@@ -124,6 +136,12 @@ export const AdminDashboard: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [productForm, setProductForm] = useState<Partial<Product>>({});
+
+  // Category State
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryForm, setCategoryForm] = useState<Partial<Category>>({});
+  const [categoryProducts, setCategoryProducts] = useState<string[]>([]);
 
   // Bulk Stock State
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -205,8 +223,12 @@ export const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isAuthReady) {
+      return;
+    }
+
     if (!user || user.email !== ADMIN_EMAIL) {
-      if (!isLoading) window.location.href = '/';
+      window.location.href = '/';
       return;
     }
 
@@ -241,6 +263,11 @@ export const AdminDashboard: React.FC = () => {
       setCategories(categoriesData);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'categories'));
 
+    const unsubOffers = onSnapshot(query(collection(db, 'offers'), orderBy('createdAt', 'desc')), (snapshot) => {
+      const offersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Offer[];
+      setOffers(offersData);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'offers'));
+
     const unsubRiders = onSnapshot(collection(db, 'riders'), (snapshot) => {
       const ridersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Rider[];
       setRiders(ridersData);
@@ -272,10 +299,11 @@ export const AdminDashboard: React.FC = () => {
       unsubProcurements();
       unsubUsers();
       unsubCategories();
+      unsubOffers();
       unsubRiders();
       unsubAssignmentLogs();
     };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isAuthReady]);
 
   // Analytics Calculations
   const now = new Date();
@@ -489,6 +517,54 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleSaveCategory = async () => {
+    if (!categoryForm.name || !categoryForm.imageUrl || categoryForm.order === undefined) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    try {
+      let categoryId = editingCategory?.id;
+      if (editingCategory) {
+        await updateDoc(doc(db, 'categories', editingCategory.id), categoryForm);
+        toast.success('Category updated successfully');
+      } else {
+        const docRef = await addDoc(collection(db, 'categories'), categoryForm);
+        categoryId = docRef.id;
+        toast.success('Category added successfully');
+      }
+
+      if (categoryId) {
+        const batch = writeBatch(db);
+        const removedProducts = products.filter(p => p.categoryId === categoryId && !categoryProducts.includes(p.id));
+        for (const p of removedProducts) {
+          batch.update(doc(db, 'products', p.id), { categoryId: '' });
+        }
+        const addedProducts = products.filter(p => categoryProducts.includes(p.id) && p.categoryId !== categoryId);
+        for (const p of addedProducts) {
+          batch.update(doc(db, 'products', p.id), { categoryId: categoryId });
+        }
+        await batch.commit();
+      }
+
+      setIsCategoryModalOpen(false);
+      setEditingCategory(null);
+      setCategoryForm({});
+      setCategoryProducts([]);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'categories');
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'categories', id));
+      toast.success('Category deleted successfully');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'categories');
+    }
+  };
+
   const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -581,137 +657,185 @@ export const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex-1 bg-[#F4F6F8] flex overflow-hidden relative font-sans">
       <BarcodeScanner 
         isOpen={isScanning} 
         onClose={() => setIsScanning(false)} 
         onScan={handleBarcodeScan} 
         continuous={scanType === 'procurement'}
       />
+      
+      {/* Sidebar Overlay for mobile */}
+      <AnimatePresence>
+        {!isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(true)}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white/40 backdrop-blur-xl border-r border-white/20 flex flex-col sticky top-0 h-screen">
-        <div className="p-6 border-b border-white/10">
-          <h1 className="text-xl font-black text-[#FF3269] tracking-tighter">ADMIN PANEL</h1>
-          <p className="text-xs font-bold text-gray-400 uppercase mt-1">Retail Management</p>
+      <motion.aside 
+        initial={false}
+        animate={{ 
+          width: isSidebarOpen ? 260 : 0,
+          opacity: isSidebarOpen ? 1 : 0,
+          x: isSidebarOpen ? 0 : -260
+        }}
+        className="bg-white border-r border-gray-200 flex flex-col h-full fixed lg:relative z-50 overflow-hidden"
+      >
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between min-w-[260px]">
+          <div>
+            <h1 className="text-2xl font-black text-[#FF3269] tracking-tighter">Zepto<span className="text-gray-800">Admin</span></h1>
+          </div>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden p-2 hover:bg-gray-50 rounded-xl transition-colors"
+          >
+            <X size={20} className="text-gray-500" />
+          </button>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto min-w-[260px] custom-scrollbar">
           <button 
             onClick={() => setActiveTab('overview')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'overview' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'overview' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <TrendingUp size={20} /> Overview
+            <TrendingUp size={18} className={activeTab === 'overview' ? 'text-[#FF3269]' : 'text-gray-400'} /> Overview
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'orders' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'orders' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <ShoppingBag size={20} /> Orders
+            <ShoppingBag size={18} className={activeTab === 'orders' ? 'text-[#FF3269]' : 'text-gray-400'} /> Orders
           </button>
           <button 
             onClick={() => setActiveTab('inventory')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'inventory' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'inventory' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Package size={20} /> Inventory
+            <Package size={18} className={activeTab === 'inventory' ? 'text-[#FF3269]' : 'text-gray-400'} /> Inventory
+          </button>
+          <button 
+            onClick={() => setActiveTab('categories')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'categories' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Tag size={18} className={activeTab === 'categories' ? 'text-[#FF3269]' : 'text-gray-400'} /> Categories
           </button>
           <button 
             onClick={() => setActiveTab('pos')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'pos' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'pos' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <ShoppingCart size={20} /> Store POS
+            <ShoppingCart size={18} className={activeTab === 'pos' ? 'text-[#FF3269]' : 'text-gray-400'} /> Store POS
           </button>
           <button 
             onClick={() => setActiveTab('sales')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'sales' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'sales' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Banknote size={20} /> Store Sales
+            <Banknote size={18} className={activeTab === 'sales' ? 'text-[#FF3269]' : 'text-gray-400'} /> Store Sales
           </button>
           <button 
             onClick={() => setActiveTab('procurement')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'procurement' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'procurement' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Scan size={20} /> Procurement
+            <Scan size={18} className={activeTab === 'procurement' ? 'text-[#FF3269]' : 'text-gray-400'} /> Procurement
           </button>
           <button 
             onClick={() => setActiveTab('customers')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'customers' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'customers' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Users size={20} /> Customers
+            <Users size={18} className={activeTab === 'customers' ? 'text-[#FF3269]' : 'text-gray-400'} /> Customers
+          </button>
+          <button 
+            onClick={() => setActiveTab('offers')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'offers' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Tag size={18} className={activeTab === 'offers' ? 'text-[#FF3269]' : 'text-gray-400'} /> Offers
           </button>
           <button 
             onClick={() => setActiveTab('rider-matching')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'rider-matching' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-matching' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Truck size={20} /> Rider Matching
+            <Truck size={18} className={activeTab === 'rider-matching' ? 'text-[#FF3269]' : 'text-gray-400'} /> Rider Matching
           </button>
           <button 
             onClick={() => setActiveTab('rider-assignment-history')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'rider-assignment-history' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-white/40'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-assignment-history' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <Clock size={20} /> Assignment History
+            <History size={18} className={activeTab === 'rider-assignment-history' ? 'text-[#FF3269]' : 'text-gray-400'} /> Assignment History
           </button>
           <button 
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'settings' ? 'bg-[#FF3269] text-white shadow-lg shadow-[#FF3269]/20' : 'text-gray-500 hover:bg-gray-50'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'settings' ? 'bg-[#FF3269]/10 text-[#FF3269]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
-            <RefreshCw size={20} /> Settings
+            <Settings size={18} className={activeTab === 'settings' ? 'text-[#FF3269]' : 'text-gray-400'} /> Settings
           </button>
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-[#FF3269] flex items-center justify-center text-white font-black relative">
-              {auth.currentUser?.displayName?.[0] || 'A'}
-              <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full shadow-sm">
-                <div className="bg-[#FF3269] rounded-full p-0.5">
-                  <Sparkles size={8} className="text-white" />
-                </div>
-              </div>
+        <div className="p-4 border-t border-gray-100 bg-white min-w-[260px]">
+          <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <div className="relative">
+              <img 
+                src={auth.currentUser?.photoURL || `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'Admin'}&background=FF3269&color=fff`} 
+                alt="Admin" 
+                className="w-10 h-10 rounded-xl object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-gray-800 truncate">{auth.currentUser?.displayName || 'Admin'}</p>
-                <div className="bg-[#FF3269]/10 text-[#FF3269] text-[8px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border border-[#FF3269]/20">
-                  <Sparkles size={8} /> AI
-                </div>
-              </div>
-              <p className="text-xs font-medium text-gray-400 truncate">{auth.currentUser?.email}</p>
+              <p className="text-sm font-bold text-gray-800 truncate">{auth.currentUser?.displayName || 'Admin'}</p>
+              <p className="text-xs font-medium text-gray-500 truncate">{auth.currentUser?.email}</p>
             </div>
           </div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex items-center justify-between mb-8 bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-sm">
-          <div>
-            <h2 className="text-3xl font-black text-gray-900 capitalize">{activeTab}</h2>
-            <p className="text-gray-500 font-medium">Welcome back, Admin. Here's what's happening today.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={handleResetDatabase}
-              disabled={isSeeding}
-              className="bg-white/40 backdrop-blur-sm text-gray-700 border border-white/20 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-white/60 transition-all disabled:opacity-50"
-            >
-              {isSeeding ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
-              Reset Database
-            </button>
-            <div className="bg-white/40 backdrop-blur-sm p-2 rounded-xl shadow-sm border border-white/20 flex items-center gap-2 px-4">
-              <Clock size={18} className="text-gray-400" />
-              <span className="font-bold text-gray-700">{format(now, 'PPP')}</span>
+      <main className="flex-1 overflow-y-auto relative bg-[#F4F6F8]">
+        <div className="p-4 md:p-8 max-w-[1600px] mx-auto min-h-full">
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl shadow-sm border border-gray-100 transition-all text-gray-600 hover:text-[#FF3269]"
+              >
+                {isSidebarOpen ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+              </button>
+              <div>
+                <h2 className="text-3xl font-black text-gray-900 capitalize tracking-tight">{activeTab.replace('-', ' ')}</h2>
+                <p className="text-gray-500 font-medium text-sm mt-1">Welcome back, Admin. Here's what's happening today.</p>
+              </div>
             </div>
-          </div>
-        </header>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={handleResetDatabase}
+                disabled={isSeeding}
+                className="bg-white text-gray-700 border border-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
+              >
+                {isSeeding ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+                <span className="hidden sm:inline">Reset DB</span>
+              </button>
+              <button 
+                onClick={handleClearAllProducts}
+                className="bg-white text-red-600 border border-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-50 transition-all shadow-sm"
+              >
+                <Trash2 size={18} />
+                <span className="hidden sm:inline">Clear Products</span>
+              </button>
+            </div>
+          </header>
 
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: 'Today Sales', value: `₹${stats.today}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50/50' },
-                { label: 'Weekly Sales', value: `₹${stats.week}`, icon: ArrowUpRight, color: 'text-green-600', bg: 'bg-green-50/50' },
-                { label: 'Monthly Sales', value: `₹${stats.month}`, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50/50' },
+                { label: 'Today Sales', value: `₹${stats.today}`, icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Weekly Sales', value: `₹${stats.week}`, icon: ArrowUpRight, color: 'text-green-600', bg: 'bg-green-50' },
+                { label: 'Monthly Sales', value: `₹${stats.month}`, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' },
                 { label: 'Total Revenue', value: `₹${stats.totalRevenue}`, icon: TrendingUp, color: 'text-[#FF3269]', bg: 'bg-[#FF3269]/10' },
               ].map((stat, i) => (
                 <motion.div 
@@ -719,9 +843,9 @@ export const AdminDashboard: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                   key={stat.label} 
-                  className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-sm"
+                  className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm"
                 >
-                  <div className={`${stat.bg} ${stat.color} w-12 h-12 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm`}>
+                  <div className={`${stat.bg} ${stat.color} w-12 h-12 rounded-xl flex items-center justify-center mb-4`}>
                     <stat.icon size={24} />
                   </div>
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
@@ -732,7 +856,7 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-sm">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Sales Trend (Last 7 Days)</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -747,7 +871,7 @@ export const AdminDashboard: React.FC = () => {
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fontWeight: 600, fill: '#9ca3af' }} />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '16px', border: '1px solid #f3f4f6', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                         itemStyle={{ fontWeight: 800, color: '#FF3269' }}
                       />
                       <Area type="monotone" dataKey="sales" stroke="#FF3269" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
@@ -756,10 +880,10 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-3xl border border-white/20 shadow-sm">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Inventory Status</h3>
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100">
+                  <div className="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
                     <div className="flex items-center gap-3">
                       <AlertTriangle className="text-red-500" />
                       <div>
@@ -769,18 +893,18 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <button 
                       onClick={() => setActiveTab('inventory')}
-                      className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-red-600 transition-colors"
+                      className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-red-600 transition-colors shadow-sm"
                     >
                       View All
                     </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                       <p className="text-xs font-bold text-gray-400 uppercase">Total Orders</p>
                       <p className="text-2xl font-black text-gray-900">{stats.totalOrders}</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
                       <p className="text-xs font-bold text-gray-400 uppercase">Total Customers</p>
                       <p className="text-2xl font-black text-gray-900">{users.length}</p>
                     </div>
@@ -788,7 +912,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Revenue by Category</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -817,7 +941,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Category Distribution</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -836,7 +960,7 @@ export const AdminDashboard: React.FC = () => {
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '16px', border: '1px solid #f3f4f6', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -854,11 +978,11 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Top Products & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Top Selling Products</h3>
                 <div className="space-y-4">
                   {topProducts.map((p, i) => (
-                    <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-100 p-1">
                           <img src={p.imageUrl} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
@@ -880,11 +1004,11 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
                 <h3 className="text-xl font-black text-gray-900 mb-6">Recent Activity</h3>
                 <div className="space-y-4">
                   {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activity.type === 'order' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'}`}>
                           {activity.type === 'order' ? <ShoppingBag size={20} /> : <ShoppingCart size={20} />}
@@ -918,7 +1042,7 @@ export const AdminDashboard: React.FC = () => {
         )}
 
         {activeTab === 'orders' && (
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h3 className="text-xl font-black text-gray-900">All Orders</h3>
               <div className="relative">
@@ -926,7 +1050,7 @@ export const AdminDashboard: React.FC = () => {
                 <input 
                   type="text" 
                   placeholder="Search orders..." 
-                  className="pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#FF3269] outline-none text-sm font-medium"
+                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none text-sm font-medium transition-all"
                 />
               </div>
             </div>
@@ -937,6 +1061,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="px-6 py-4">Order ID</th>
                     <th className="px-6 py-4">Customer</th>
                     <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Delivery Fee</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Date</th>
                     <th className="px-6 py-4">Action</th>
@@ -952,6 +1077,14 @@ export const AdminDashboard: React.FC = () => {
                         <p className="text-xs text-gray-400 font-medium">{order.deliveryAddress}</p>
                       </td>
                       <td className="px-6 py-4 font-black text-gray-900">₹{order.totalAmount}</td>
+                      <td className="px-6 py-4 font-bold text-gray-500">
+                        {order.deliveryFee !== undefined ? `₹${order.deliveryFee}` : 'N/A'}
+                        {order.riderEarnings !== undefined && (
+                          <div className="text-[10px] text-gray-400 font-medium">
+                            Rider: ₹{order.riderEarnings} | Admin: ₹{order.adminEarnings}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           order.status === 'delivered' ? 'bg-green-100 text-green-600' :
@@ -1130,6 +1263,64 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'categories' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-gray-800">Manage Categories</h3>
+              <button 
+                onClick={() => {
+                  setEditingCategory(null);
+                  setCategoryForm({ order: categories.length });
+                  setCategoryProducts([]);
+                  setIsCategoryModalOpen(true);
+                }}
+                className="bg-[#FF3269] text-white px-6 py-3 rounded-2xl font-bold hover:bg-[#E62D5E] transition-colors shadow-lg shadow-[#FF3269]/20 flex items-center gap-2"
+              >
+                <Plus size={20} /> Add Category
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {categories.map((category) => (
+                <div key={category.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all group">
+                  <div className="aspect-square rounded-2xl bg-gray-50 mb-4 overflow-hidden relative">
+                    <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button 
+                        onClick={() => {
+                          setEditingCategory(category);
+                          setCategoryForm(category);
+                          setCategoryProducts(products.filter(p => p.categoryId === category.id).map(p => p.id));
+                          setIsCategoryModalOpen(true);
+                        }}
+                        className="p-3 bg-white text-gray-900 rounded-xl hover:bg-gray-100 transition-colors"
+                      >
+                        <Edit size={20} />
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this category?')) {
+                            handleDeleteCategory(category.id);
+                          }
+                        }}
+                        className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{category.name}</h4>
+                      <p className="text-xs text-gray-500">Order: {category.order}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'pos' && (
           <div className="h-[calc(100vh-180px)]">
             <StorePOS 
@@ -1214,7 +1405,7 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'procurement' && (
           <div className="space-y-8">
-            <div className="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center">
+            <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
               <div className="w-20 h-20 bg-[#FF3269]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#FF3269]">
                 <Scan size={40} />
               </div>
@@ -1241,7 +1432,7 @@ export const AdminDashboard: React.FC = () => {
                       }
                     }}
                     placeholder="Enter or scan barcode..." 
-                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                   />
                   {procurementBarcode && (
                     <button 
@@ -1259,7 +1450,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
                 <button 
                   onClick={() => { setScanType('procurement'); setIsScanning(true); }}
-                  className="bg-gray-900 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10"
+                  className="bg-gray-900 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-gray-800 transition-all shadow-sm"
                 >
                   <Scan size={24} /> Scan
                 </button>
@@ -1270,7 +1461,7 @@ export const AdminDashboard: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100"
+                className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100"
               >
                 {procurementProduct ? (
                   <div className="flex gap-6">
@@ -1288,7 +1479,7 @@ export const AdminDashboard: React.FC = () => {
                             type="number" 
                             value={procurementQuantity}
                             onChange={(e) => setProcurementQuantity(parseInt(e.target.value))}
-                            className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold transition-all"
                           />
                         </div>
                         <div>
@@ -1297,7 +1488,7 @@ export const AdminDashboard: React.FC = () => {
                             type="number" 
                             value={procurementCost}
                             onChange={(e) => setProcurementCost(parseFloat(e.target.value))}
-                            className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold transition-all"
                           />
                         </div>
                       </div>
@@ -1327,7 +1518,7 @@ export const AdminDashboard: React.FC = () => {
                             toast.error('Failed to update stock');
                           }
                         }}
-                        className="w-full bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all"
+                        className="w-full bg-[#FF3269] text-white px-8 py-3 rounded-xl font-black hover:bg-[#E62D5E] transition-all shadow-sm"
                       >
                         Update Stock
                       </button>
@@ -1342,7 +1533,7 @@ export const AdminDashboard: React.FC = () => {
                         setProductForm({ barcode: procurementBarcode, categoryId: 'fruits-veg' });
                         setIsProductModalOpen(true);
                       }}
-                      className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black hover:bg-gray-800 transition-all"
+                      className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black hover:bg-gray-800 transition-all shadow-sm"
                     >
                       Add New Product
                     </button>
@@ -1352,7 +1543,7 @@ export const AdminDashboard: React.FC = () => {
             )}
 
             {/* Procurement History */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b border-gray-100">
                 <h3 className="text-xl font-black text-gray-900">Procurement History</h3>
               </div>
@@ -1415,7 +1606,7 @@ export const AdminDashboard: React.FC = () => {
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     placeholder="Search by name or email..." 
-                    className="pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#FF3269] outline-none text-sm font-medium w-64"
+                    className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none text-sm font-medium w-64 transition-all"
                   />
                 </div>
               </div>
@@ -1433,10 +1624,12 @@ export const AdminDashboard: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {users
-                      .filter(u => 
-                        u.displayName?.toLowerCase().includes(userSearch.toLowerCase()) || 
-                        u.email.toLowerCase().includes(userSearch.toLowerCase())
-                      )
+                      .filter(u => {
+                        const searchLower = userSearch.toLowerCase();
+                        const nameMatch = u.displayName?.toLowerCase().includes(searchLower);
+                        const emailMatch = u.email?.toLowerCase().includes(searchLower);
+                        return nameMatch || emailMatch;
+                      })
                       .map((u) => {
                         const userOrders = orders.filter(o => o.userId === u.uid);
                         const totalSpent = userOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -1499,9 +1692,116 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'offers' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-xl font-black text-gray-900">Offers Management</h3>
+                <button 
+                  onClick={() => {
+                    const code = prompt("Enter offer code (e.g., WELCOME50):");
+                    if (!code) return;
+                    const title = prompt("Enter offer title:");
+                    if (!title) return;
+                    const description = prompt("Enter offer description:");
+                    if (!description) return;
+                    const discountType = prompt("Enter discount type (percentage or flat):");
+                    if (discountType !== 'percentage' && discountType !== 'flat') return;
+                    const discountValue = parseFloat(prompt("Enter discount value:") || "0");
+                    if (isNaN(discountValue) || discountValue <= 0) return;
+                    const targetAudience = prompt("Enter target audience (all, first_order, loyal_customer):");
+                    if (targetAudience !== 'all' && targetAudience !== 'first_order' && targetAudience !== 'loyal_customer') return;
+
+                    addDoc(collection(db, 'offers'), {
+                      title,
+                      description,
+                      code: code.toUpperCase(),
+                      discountType,
+                      discountValue,
+                      targetAudience,
+                      isActive: true,
+                      createdAt: serverTimestamp()
+                    }).then(() => toast.success("Offer added successfully"))
+                      .catch(e => handleFirestoreError(e, OperationType.CREATE, 'offers'));
+                  }}
+                  className="bg-[#FF3269] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#e62a5d] transition-colors shadow-sm"
+                >
+                  <Plus size={18} /> Add Offer
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 text-gray-400 text-xs font-black uppercase tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4">Code</th>
+                      <th className="px-6 py-4">Title</th>
+                      <th className="px-6 py-4">Discount</th>
+                      <th className="px-6 py-4">Target</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {offers.map((offer) => (
+                      <tr key={offer.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded-lg">{offer.code}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-gray-900">{offer.title}</div>
+                          <div className="text-sm text-gray-500">{offer.description}</div>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {offer.discountType === 'percentage' ? `${offer.discountValue}%` : `₹${offer.discountValue}`}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs font-bold uppercase">
+                            {offer.targetAudience.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => {
+                              updateDoc(doc(db, 'offers', offer.id), { isActive: !offer.isActive })
+                                .catch(e => handleFirestoreError(e, OperationType.UPDATE, `offers/${offer.id}`));
+                            }}
+                            className={`px-3 py-1 rounded-full text-xs font-bold ${offer.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                          >
+                            {offer.isActive ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => {
+                              if(confirm("Are you sure you want to delete this offer?")) {
+                                deleteDoc(doc(db, 'offers', offer.id))
+                                  .catch(e => handleFirestoreError(e, OperationType.DELETE, `offers/${offer.id}`));
+                              }
+                            }}
+                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {offers.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500 font-medium">
+                          No offers found. Create one to get started.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'rider-matching' && (
           <div className="space-y-8">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-2xl font-black text-gray-900">Rider Matching System</h3>
@@ -1522,21 +1822,21 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+                  <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button 
                       onClick={() => setFilterOnlineOnly(true)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-400'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       Online Only
                     </button>
                     <button 
                       onClick={() => setFilterOnlineOnly(false)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${!filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-400'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${!filterOnlineOnly ? 'bg-white text-[#FF3269] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
                       All Riders
                     </button>
                   </div>
-                  <div className="px-4 py-2 bg-green-50 text-green-600 rounded-xl font-bold text-sm flex items-center gap-2">
+                  <div className="px-4 py-2 bg-green-50 text-green-600 rounded-xl font-bold text-sm flex items-center gap-2 border border-green-100">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     {riders.filter(r => r.status === 'online').length} Online
                   </div>
@@ -1583,7 +1883,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Matching Logic Demo */}
-                <div className="bg-gray-50 rounded-3xl p-6 border border-gray-200">
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                   <div className="mb-6">
                     <h4 className="text-sm font-black text-gray-400 uppercase tracking-wider mb-4">Rider Assignment Map</h4>
                     <RiderMap 
@@ -1897,7 +2197,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-4xl font-black text-gray-900 tracking-tight">Assignment History</h2>
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Assignment History</h2>
                 <p className="text-gray-500 font-medium">Log of all rider assignments and their status.</p>
               </div>
               <div className="flex items-center gap-3">
@@ -1916,7 +2216,7 @@ export const AdminDashboard: React.FC = () => {
                   placeholder="Search by Order ID or Rider Name..."
                   value={assignmentSearch}
                   onChange={(e) => setAssignmentSearch(e.target.value)}
-                  className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700 shadow-sm"
+                  className="w-full bg-white border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 shadow-sm transition-all"
                 />
               </div>
               <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
@@ -1936,11 +2236,11 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100">
+                    <tr className="bg-gray-50 border-b border-gray-100">
                       <th className="px-8 py-6 text-xs font-black text-gray-400 uppercase tracking-wider">Order ID</th>
                       <th className="px-8 py-6 text-xs font-black text-gray-400 uppercase tracking-wider">Rider</th>
                       <th className="px-8 py-6 text-xs font-black text-gray-400 uppercase tracking-wider">Assigned At</th>
@@ -2043,10 +2343,10 @@ export const AdminDashboard: React.FC = () => {
 
         {activeTab === 'settings' && (
           <div className="space-y-8">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <h3 className="text-2xl font-black text-gray-900 mb-6">System Settings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 bg-gray-50 rounded-3xl border border-gray-200">
+                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
                   <h4 className="text-lg font-black text-gray-900 mb-2">Database Management</h4>
                   <p className="text-gray-500 text-sm font-medium mb-6">Reset and seed the database with mock categories, products, riders, and orders for testing.</p>
                   <button 
@@ -2058,13 +2358,13 @@ export const AdminDashboard: React.FC = () => {
                         toast.success('Database seeded successfully!');
                       }
                     }}
-                    className="w-full py-4 bg-[#FF3269] text-white rounded-2xl font-black shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#FF3269] text-white rounded-2xl font-black shadow-sm hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
                   >
                     <Database size={20} /> Seed Database
                   </button>
                 </div>
                 
-                <div className="p-6 bg-gray-50 rounded-3xl border border-gray-200">
+                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100">
                   <h4 className="text-lg font-black text-gray-900 mb-2">Admin Profile</h4>
                   <div className="flex items-center gap-4 mt-4">
                     <div className="w-12 h-12 rounded-full bg-[#FF3269]/10 flex items-center justify-center text-[#FF3269] font-black">
@@ -2080,7 +2380,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
                     <Settings size={20} />
@@ -2094,7 +2394,7 @@ export const AdminDashboard: React.FC = () => {
                     <input 
                       type="text" 
                       defaultValue="Retail Management"
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2102,23 +2402,23 @@ export const AdminDashboard: React.FC = () => {
                     <input 
                       type="email" 
                       defaultValue="contact@store.com"
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-black text-gray-400 uppercase ml-1">Currency</label>
-                    <select className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700">
+                    <select className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all">
                       <option value="INR">INR (₹)</option>
                       <option value="USD">USD ($)</option>
                     </select>
                   </div>
-                  <button className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black hover:bg-gray-800 transition-all mt-4">
+                  <button className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black hover:bg-gray-800 transition-all mt-4 shadow-sm">
                     Save General Settings
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
@@ -2192,9 +2492,9 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500 border border-red-100">
                     <AlertTriangle size={20} />
                   </div>
                   <h3 className="text-xl font-black text-gray-900">Danger Zone</h3>
@@ -2206,7 +2506,7 @@ export const AdminDashboard: React.FC = () => {
                   <button 
                     onClick={handleClearAllProducts}
                     disabled={isClearing}
-                    className="w-full bg-white text-red-600 border-2 border-red-100 py-4 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-white text-red-600 border border-red-200 py-4 rounded-2xl font-black hover:bg-red-50 transition-all flex items-center justify-center gap-2 shadow-sm"
                   >
                     {isClearing ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={20} />}
                     Delete All Products
@@ -2215,7 +2515,7 @@ export const AdminDashboard: React.FC = () => {
                   <button 
                     onClick={handleResetDatabase}
                     disabled={isSeeding}
-                    className="w-full bg-red-600 text-white py-4 rounded-2xl font-black hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
+                    className="w-full bg-red-600 text-white py-4 rounded-2xl font-black hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-sm"
                   >
                     {isSeeding ? <Loader2 className="animate-spin" size={20} /> : <RefreshCw size={20} />}
                     Reset Entire Database
@@ -2226,6 +2526,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
+        </div>
       </main>
 
       {/* Bulk Stock Update Modal */}
@@ -2236,7 +2537,7 @@ export const AdminDashboard: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden"
+              className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
             >
               <div className="p-8 bg-orange-500 text-white">
                 <div className="flex items-center justify-between mb-4">
@@ -2258,7 +2559,7 @@ export const AdminDashboard: React.FC = () => {
                     type="number" 
                     value={bulkStockValue}
                     onChange={(e) => setBulkStockValue(parseInt(e.target.value))}
-                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-orange-500 outline-none font-black text-2xl text-gray-700"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none font-black text-2xl text-gray-700 transition-all"
                     placeholder="0"
                   />
                   <p className="text-[10px] font-bold text-gray-400 ml-1">This will overwrite the current stock for all selected products.</p>
@@ -2274,12 +2575,130 @@ export const AdminDashboard: React.FC = () => {
                   <button 
                     onClick={handleBulkStockUpdate}
                     disabled={isBulkUpdating}
-                    className="flex-1 bg-orange-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-orange-500 text-white py-4 rounded-2xl font-black shadow-sm hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isBulkUpdating ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     Update All
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Category Edit Modal */}
+      <AnimatePresence>
+        {isCategoryModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <h2 className="text-2xl font-black text-gray-800">
+                  {editingCategory ? 'Edit Category' : 'Add Category'}
+                </h2>
+                <button 
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X size={24} className="text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase ml-1">Name</label>
+                  <input 
+                    type="text" 
+                    value={categoryForm.name || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    placeholder="e.g. Fruits & Vegetables"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase ml-1">Image URL</label>
+                  <input 
+                    type="text" 
+                    value={categoryForm.imageUrl || ''}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase ml-1">Order</label>
+                  <input 
+                    type="number" 
+                    value={categoryForm.order || 0}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, order: Number(e.target.value) })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase ml-1">Products in Category</label>
+                  <div className="max-h-48 overflow-y-auto bg-gray-50 rounded-2xl p-2 border border-gray-100">
+                    {products.map(product => (
+                      <label key={product.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-xl cursor-pointer transition-colors">
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition-colors ${
+                          categoryProducts.includes(product.id)
+                            ? 'bg-[#FF3269] border-[#FF3269]'
+                            : 'border-gray-300 bg-white'
+                        }`}>
+                          {categoryProducts.includes(product.id) && <Check size={12} className="text-white" />}
+                        </div>
+                        <img src={product.imageUrl} alt={product.name} className="w-8 h-8 rounded-lg object-cover" referrerPolicy="no-referrer" />
+                        <span className="font-bold text-gray-700 text-sm flex-1">{product.name}</span>
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={categoryProducts.includes(product.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCategoryProducts([...categoryProducts, product.id]);
+                            } else {
+                              setCategoryProducts(categoryProducts.filter(id => id !== product.id));
+                            }
+                          }}
+                        />
+                      </label>
+                    ))}
+                    {products.length === 0 && (
+                      <div className="p-4 text-center text-gray-400 font-bold text-sm">
+                        No products available
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3 sticky bottom-0">
+                <button 
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="flex-1 bg-white text-gray-700 py-4 rounded-2xl font-bold shadow-sm hover:bg-gray-50 transition-all border border-gray-200"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveCategory}
+                  className="flex-1 bg-[#FF3269] text-white py-4 rounded-2xl font-black shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                >
+                  <Save size={20} /> Save
+                </button>
               </div>
             </motion.div>
           </div>
@@ -2301,16 +2720,16 @@ export const AdminDashboard: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white w-full max-w-xl rounded-[32px] shadow-2xl overflow-hidden"
+              className="relative bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden"
             >
-              <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                 <div>
                   <h3 className="text-2xl font-black text-gray-900">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Inventory Management</p>
                 </div>
                 <button 
                   onClick={() => setIsProductModalOpen(false)}
-                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all"
+                  className="w-10 h-10 rounded-full bg-gray-50 shadow-sm flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all"
                 >
                   <X size={20} />
                 </button>
@@ -2324,7 +2743,7 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.name || ''}
                       onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                       placeholder="e.g. Banana Robusta"
                     />
                   </div>
@@ -2334,7 +2753,7 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.unit || ''}
                       onChange={(e) => setProductForm({ ...productForm, unit: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                       placeholder="e.g. 500g, 1L"
                     />
                   </div>
@@ -2347,7 +2766,7 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.price || ''}
                       onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -2356,7 +2775,7 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.discountPrice || ''}
                       onChange={(e) => setProductForm({ ...productForm, discountPrice: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                 </div>
@@ -2368,17 +2787,21 @@ export const AdminDashboard: React.FC = () => {
                       type="number" 
                       value={productForm.stock || ''}
                       onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-400 uppercase ml-1">Category ID</label>
-                    <input 
-                      type="text" 
+                    <label className="text-xs font-black text-gray-400 uppercase ml-1">Category</label>
+                    <select 
                       value={productForm.categoryId || ''}
                       onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
-                    />
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 appearance-none transition-all"
+                    >
+                      <option value="" disabled>Select a category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -2389,12 +2812,12 @@ export const AdminDashboard: React.FC = () => {
                       type="text" 
                       value={productForm.barcode || ''}
                       onChange={(e) => setProductForm({ ...productForm, barcode: e.target.value })}
-                      className="flex-1 bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-mono font-bold text-gray-700"
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-mono font-bold text-gray-700 transition-all"
                       placeholder="Scan or enter barcode"
                     />
                     <button 
                       onClick={() => { setScanType('edit'); setIsScanning(true); }}
-                      className="bg-gray-900 text-white px-4 rounded-2xl hover:bg-gray-800 transition-all"
+                      className="bg-gray-900 text-white px-4 rounded-2xl hover:bg-gray-800 transition-all shadow-sm"
                     >
                       <Scan size={20} />
                     </button>
@@ -2410,7 +2833,7 @@ export const AdminDashboard: React.FC = () => {
                           type="text" 
                           value={productForm.imageUrl || ''}
                           onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                          className="w-full bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 transition-all"
                           placeholder="https://..."
                         />
                       </div>
@@ -2457,7 +2880,7 @@ export const AdminDashboard: React.FC = () => {
                               newImages[idx] = e.target.value;
                               setProductForm({ ...productForm, images: newImages });
                             }}
-                            className="flex-1 bg-gray-50 border-none rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269] outline-none font-bold text-gray-700 text-sm"
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#FF3269]/20 focus:border-[#FF3269] outline-none font-bold text-gray-700 text-sm transition-all"
                             placeholder="Additional image URL..."
                           />
                           <button 
@@ -2492,13 +2915,13 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-8 bg-gray-50 border-t border-gray-100 flex gap-4">
                 <button 
                   onClick={() => setIsProductModalOpen(false)}
-                  className="flex-1 bg-white border-2 border-gray-200 text-gray-500 py-4 rounded-2xl font-black hover:bg-gray-100 transition-all"
+                  className="flex-1 bg-white border border-gray-200 text-gray-500 py-4 rounded-2xl font-black hover:bg-gray-50 transition-all shadow-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleSaveProduct}
-                  className="flex-1 bg-[#FF3269] text-white py-4 rounded-2xl font-black shadow-lg shadow-[#FF3269]/20 hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#FF3269] text-white py-4 rounded-2xl font-black shadow-sm hover:bg-[#E62D5E] transition-all flex items-center justify-center gap-2"
                 >
                   <Save size={20} /> Save Product
                 </button>

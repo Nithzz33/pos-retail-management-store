@@ -13,6 +13,12 @@ interface CartContextType {
   surgeMultiplier: number;
   surgeAmount: number;
   finalAmount: number;
+  deliveryFee: number;
+  setDeliveryFee: (fee: number) => void;
+  riderEarnings: number;
+  adminEarnings: number;
+  paymentMethod: 'cash' | 'online';
+  setPaymentMethod: (method: 'cash' | 'online') => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -24,6 +30,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [surgeMultiplier, setSurgeMultiplier] = useState(1.0);
   const [riderCount, setRiderCount] = useState(0);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
+  const [deliveryFee, setDeliveryFee] = useState(20);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('online');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -69,6 +77,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubOrders = onSnapshot(query(collection(db, 'orders'), where('status', '==', 'pending')), (snapshot) => {
       setPendingOrderCount(snapshot.size);
+    }, (error) => {
+      console.warn("Could not fetch pending orders for surge calculation (expected for non-admins). Using mock value.");
+      // Use a mock value for demand if we can't read orders
+      setPendingOrderCount(Math.floor(Math.random() * 10) + 1);
     });
 
     return () => {
@@ -171,6 +183,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const surgeAmount = totalAmount * (surgeMultiplier - 1);
   const finalAmount = totalAmount + surgeAmount;
 
+  const totalDeliveryRevenue = deliveryFee + surgeAmount;
+  const riderEarnings = Math.round(totalDeliveryRevenue * 0.8);
+  const adminEarnings = totalDeliveryRevenue - riderEarnings;
+
+  // Display the current surge multiplier and surge amount in the cart summary
+  console.log(`Cart Summary - Surge Multiplier: ${surgeMultiplier}x, Surge Amount: ₹${surgeAmount.toFixed(2)}`);
+
   return (
     <CartContext.Provider value={{ 
       cartItems, 
@@ -181,7 +200,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalAmount,
       surgeMultiplier,
       surgeAmount,
-      finalAmount
+      finalAmount,
+      deliveryFee,
+      setDeliveryFee,
+      riderEarnings,
+      adminEarnings,
+      paymentMethod,
+      setPaymentMethod
     }}>
       {children}
     </CartContext.Provider>

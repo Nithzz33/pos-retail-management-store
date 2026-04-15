@@ -80,6 +80,18 @@ export interface CartItem {
   product?: Product;
 }
 
+export interface Offer {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  targetAudience: 'all' | 'first_order' | 'loyal_customer';
+  isActive: boolean;
+  createdAt: any;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -96,6 +108,11 @@ export interface Order {
   deliveryAddress: string;
   surgeMultiplier: number;
   surgeAmount: number;
+  deliveryFee?: number;
+  riderEarnings?: number;
+  adminEarnings?: number;
+  discountAmount?: number;
+  appliedOfferId?: string;
   pickupLocation?: {
     lat: number;
     lng: number;
