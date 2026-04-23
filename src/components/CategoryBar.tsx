@@ -3,9 +3,13 @@ import { db } from '../firebase';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Category } from '../types';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
-export const CategoryBar: React.FC = () => {
+interface CategoryBarProps {
+  selectedCategories: string[];
+  onCategoryChange: (categories: string[]) => void;
+}
+
+export const CategoryBar: React.FC<CategoryBarProps> = ({ selectedCategories, onCategoryChange }) => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -15,29 +19,40 @@ export const CategoryBar: React.FC = () => {
     });
   }, []);
 
+  const handleCategoryClick = (categoryId: string) => {
+    if (selectedCategories.includes(categoryId)) {
+      onCategoryChange(selectedCategories.filter(id => id !== categoryId));
+    } else {
+      onCategoryChange([categoryId]); // Select exclusively like BlinkIt
+    }
+  };
+
   return (
-    <div className="bg-white border-b border-gray-100 overflow-x-auto no-scrollbar sticky top-[72px] z-40">
-      <div className="container mx-auto px-4 flex items-center gap-8 py-3 min-w-max">
-        {categories.map((cat) => (
-          <Link key={cat.id} to={`/category/${cat.id}`}>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center gap-2 cursor-pointer group"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gray-50 p-2 group-hover:bg-[#0c831f]/5 transition-colors">
-                <img 
-                  src={cat.imageUrl} 
-                  alt={cat.name} 
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <span className="text-[11px] font-bold text-gray-600 group-hover:text-[#0c831f] transition-colors text-center max-w-[80px]">
-                {cat.name}
-              </span>
-            </motion.div>
-          </Link>
-        ))}
+    <div className="bg-white py-6 border-b border-gray-100 overflow-x-auto no-scrollbar relative z-30">
+      <div className="container mx-auto px-4 flex items-start gap-4 min-w-max">
+        {categories.map((cat) => {
+          const isSelected = selectedCategories.includes(cat.id);
+          return (
+            <div key={cat.id} onClick={() => handleCategoryClick(cat.id)}>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className={`flex flex-col items-center gap-3 cursor-pointer group w-24 md:w-28 lg:w-32`}
+              >
+                <div className={`w-full aspect-square rounded-[2rem] bg-[#f8f9fa] overflow-hidden flex items-center justify-center p-3 transition-all ${isSelected ? 'ring-2 ring-[#a111a8] bg-[#a111a8]/5' : 'hover:bg-gray-100'}`}>
+                  <img 
+                    src={cat.imageUrl} 
+                    alt={cat.name} 
+                    className="w-full h-full object-contain mix-blend-multiply"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <span className={`text-xs md:text-sm font-bold text-center leading-tight transition-colors ${isSelected ? 'text-[#a111a8]' : 'text-gray-800'}`}>
+                  {cat.name}
+                </span>
+              </motion.div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

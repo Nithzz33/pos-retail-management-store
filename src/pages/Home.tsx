@@ -4,7 +4,6 @@ import { collection, onSnapshot, query, where, limit, getDocs } from 'firebase/f
 import { Product, Offer } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CategoryBar } from '../components/CategoryBar';
-import { CategoryNav } from '../components/CategoryNav';
 import { FilterBar } from '../components/FilterBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ShoppingCart, Globe, Scan, History, Tag } from 'lucide-react';
@@ -18,6 +17,7 @@ const ADMIN_EMAIL = "sainithingowda3714@gmail.com";
 
 export const Home: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [userOrderCount, setUserOrderCount] = useState(0);
@@ -57,6 +57,11 @@ export const Home: React.FC = () => {
       setLoading(false);
     });
 
+    const unsubCategories = onSnapshot(collection(db, 'categories'), (snapshot) => {
+      const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCategories(cats);
+    });
+
     const unsubOffers = onSnapshot(query(collection(db, 'offers'), where('isActive', '==', true)), (snapshot) => {
       const offersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Offer[];
       setOffers(offersData);
@@ -74,6 +79,7 @@ export const Home: React.FC = () => {
 
     return () => {
       unsubProducts();
+      unsubCategories();
       unsubOffers();
     };
   }, [user]);
@@ -134,28 +140,26 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-bg">
+    <div className="min-h-screen bg-app-bg pb-20">
       {isAdmin && (
-        <div className="bg-white/40 backdrop-blur-md border-b border-white/20 sticky top-[88px] z-40">
-          <div className="container mx-auto px-4 flex items-center justify-center gap-4 py-2">
-            <button 
-              onClick={() => setViewMode('online')}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#0c831f] text-white shadow-lg shadow-[#0c831f]/20' : 'text-gray-500 hover:bg-white/40'}`}
-            >
-              <Globe size={18} /> Online Store
-            </button>
-            <button 
-              onClick={() => setViewMode('pos')}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-black transition-all ${viewMode === 'pos' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'text-gray-500 hover:bg-white/40'}`}
-            >
-              <ShoppingCart size={18} /> Store POS
-            </button>
-          </div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-gray-100 p-1.5 flex items-center gap-1">
+          <button 
+            onClick={() => setViewMode('online')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black transition-all ${viewMode === 'online' ? 'bg-[#0c831f] text-white shadow-lg shadow-[#0c831f]/20' : 'text-gray-500 hover:bg-gray-100'}`}
+          >
+            <Globe size={18} /> Online Store
+          </button>
+          <button 
+            onClick={() => setViewMode('pos')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black transition-all ${viewMode === 'pos' ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20' : 'text-gray-500 hover:bg-gray-100'}`}
+          >
+            <ShoppingCart size={18} /> Store POS
+          </button>
         </div>
       )}
 
       {viewMode === 'pos' ? (
-        <main className="container mx-auto px-4 py-8">
+        <main className="container max-w-7xl mx-auto px-4 py-8">
           <StorePOS 
             products={allProducts} 
             onScan={() => setIsScanning(true)} 
@@ -190,7 +194,7 @@ export const Home: React.FC = () => {
             onClearAll={clearFilters}
           />
           
-          <main className="container mx-auto px-4 py-8">
+          <main className="container max-w-7xl mx-auto px-4 py-8">
             {/* Offers Section */}
             {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && applicableOffers.length > 0 && (
               <section className="mb-8">
@@ -230,45 +234,88 @@ export const Home: React.FC = () => {
               </section>
             )}
 
-            {/* Hero Section */}
-        {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="rounded-3xl overflow-hidden shadow-xl bg-[#f8cb46] p-8 text-gray-900 flex flex-col justify-center relative group"
-            >
-              <div className="relative z-10">
-                <h2 className="text-4xl font-black mb-4 leading-tight">Groceries delivered in <br/> <span className="text-[#0c831f]">10 Minutes</span></h2>
-                <p className="text-gray-800/80 font-medium mb-6">Fresh fruits, vegetables, dairy & more at your doorstep.</p>
-                <button className="bg-[#0c831f] text-white px-8 py-3 rounded-xl font-black hover:bg-[#0a6c19] transition-colors">Shop Now</button>
-              </div>
-              <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-20 group-hover:scale-110 transition-transform duration-700">
-                <img src="https://cdn.zeptonow.com/production///tr:w-640,ar-640-640,pr-true,f-auto,q-80/inventory/banner/06020c64-071c-438e-8913-64998811d333.png" alt="" className="w-full h-full object-contain" />
-              </div>
-            </motion.div>
+            {/* Banners Section */}
+            {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
+              <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+                {/* Left Banner */}
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="rounded-[2rem] overflow-hidden bg-gradient-to-br from-[#f1e6fd] to-[#ebd9fd] p-8 lg:p-10 flex flex-col justify-between relative group shadow-sm border border-purple-100"
+                >
+                  <div className="text-center mb-8">
+                    <h2 className="text-xl lg:text-2xl font-black tracking-tight text-[#812cba]">
+                      <span className="text-[#a111a8]/60">ALL </span> 
+                      NEW ZEPTO <span className="text-[#a111a8]/60">EXPERIENCE</span>
+                    </h2>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                    <div className="flex-1 bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#a111a8] to-[#812cba] rounded-2xl flex items-center justify-center text-white pb-1 font-black text-2xl shadow-inner">
+                        Z
+                      </div>
+                      <div>
+                        <p className="text-3xl font-black text-[#812cba] leading-none">₹0 <span className="text-xl">FEES</span></p>
+                      </div>
+                    </div>
+                    <div className="flex-1 bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                      <div className="w-12 h-12 bg-[#ffe800] rounded-2xl flex items-center justify-center text-[#812cba] font-black text-2xl shadow-inner relative">
+                        <span className="absolute -top-1 -left-1 bg-[#812cba] w-4 h-4 rounded-full border-2 border-white"></span>
+                        ₹
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-[#812cba] leading-tight">EVERYDAY<br/><span className="text-xl tracking-tight">LOWEST PRICES*</span></p>
+                      </div>
+                    </div>
+                  </div>
 
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="rounded-3xl overflow-hidden shadow-xl bg-gray-900 p-8 text-white flex flex-col justify-center relative group"
-            >
-              <div className="relative z-10">
-                <h2 className="text-4xl font-black mb-4 leading-tight">Get <span className="text-[#f8cb46]">50% OFF</span> on <br/> your first order</h2>
-                <p className="text-white/80 font-medium mb-6">Use code: BLINKIT50. Valid on orders above ₹199.</p>
-                <button className="bg-[#f8cb46] text-gray-900 px-8 py-3 rounded-xl font-black hover:bg-yellow-300 transition-colors">Claim Offer</button>
-              </div>
-              <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-20 group-hover:scale-110 transition-transform duration-700">
-                <img src="https://cdn.zeptonow.com/production///tr:w-640,ar-640-640,pr-true,f-auto,q-80/inventory/banner/8014594c-8367-463e-903d-818222634351.png" alt="" className="w-full h-full object-contain" />
-              </div>
-            </motion.div>
-          </section>
-        )}
+                  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                    {['₹0 Handling Fee', '₹0 Delivery Fee*', '₹0 Rain & Surge Fee'].map((text, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <span className="font-bold text-[#812cba] text-sm">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-center text-[#812cba]/60 font-bold mt-4">*T&C Apply. Above specific minimum order value</p>
+                </motion.div>
 
-        {/* Category Navigation Bar - NEW */}
-        {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && (
-          <CategoryNav />
-        )}
+                {/* Right Banner */}
+                <motion.div 
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="rounded-[2rem] overflow-hidden bg-[#0d163f] p-8 lg:p-12 text-white flex flex-col relative group shadow-sm h-[320px] lg:h-auto"
+                >
+                  <div className="relative z-10 max-w-[60%]">
+                    <h2 className="text-4xl lg:text-5xl font-black mb-4 leading-none tracking-tight">Paan Corner</h2>
+                    <p className="text-white/90 font-medium mb-8 text-sm lg:text-base leading-relaxed">
+                      Get smoking accessories, fresheners & more in Minutes this IPL with Zepto!
+                    </p>
+                    <button className="bg-white text-gray-900 px-8 py-3.5 rounded-2xl font-black text-lg hover:scale-105 transition-transform shadow-xl">
+                      Order now
+                    </button>
+                  </div>
+                  <div className="absolute right-0 bottom-0 w-full lg:w-2/3 h-full opacity-90">
+                    <img 
+                      src="https://images.unsplash.com/photo-1540324155974-7523202daa3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                      alt="Stadium" 
+                      className="w-full h-full object-cover object-right opacity-40 mix-blend-screen"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="absolute right-4 bottom-0 h-[85%] w-1/2 flex items-end justify-end pointer-events-none">
+                     <img 
+                      src="https://cdn.zeptonow.com/production///tr:w-640,ar-640-640,pr-true,f-auto,q-80/inventory/banner/8014594c-8367-463e-903d-818222634351.png" 
+                      alt="Products" 
+                      className="h-full w-auto object-contain object-bottom translate-y-4 group-hover:-translate-y-2 transition-transform duration-500"
+                    />
+                  </div>
+                </motion.div>
+              </section>
+            )}
 
         {/* Recently Viewed Section */}
         {!priceRange && !isPopularOnly && sort === 'newest' && selectedCategories.length === 0 && recentlyViewed.length > 0 && (
@@ -369,14 +416,14 @@ export const Home: React.FC = () => {
                     const categoryProducts = filteredProducts.filter(p => p.categoryId === categoryId);
                     if (categoryProducts.length === 0) return null;
                     
-                    // Try to find category name from the first product's categoryId
-                    // Note: We don't have categories array in Home.tsx directly, so we'll just use a generic title or fetch it if needed.
-                    // For now, we'll just show the products.
+                    const category = categories.find(c => c.id === categoryId);
+                    const categoryName = category ? category.name : categoryId.replace(/-/g, ' ');
+
                     return (
                       <div key={categoryId}>
                         <div className="flex items-center justify-between mb-4">
                           <h2 className="text-xl lg:text-2xl font-black text-gray-800 capitalize">
-                            {categoryId.replace(/-/g, ' ')}
+                            {categoryName}
                           </h2>
                         </div>
                         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">

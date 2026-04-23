@@ -107,14 +107,14 @@ export const CategoryProducts: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-bg pb-20">
       {/* Header */}
-      <div className="bg-white/60 backdrop-blur-xl border-b border-white/20 sticky top-[88px] z-30">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to="/" className="p-2 hover:bg-white/20 rounded-full transition-colors">
+      <div className="bg-white/80 border-b border-white/20 shadow-[0_4px_30px_rgb(0,0,0,0.03)]">
+        <div className="container max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+          <Link to="/" className="p-2 hover:bg-black/5 rounded-2xl transition-colors">
             <ChevronLeft size={24} className="text-gray-600" />
           </Link>
           <div>
-            <h1 className="text-xl font-black text-gray-900">{category?.name || 'Category'}</h1>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{filteredProducts.length} Items</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">{category?.name || 'Category'}</h1>
+            <p className="text-sm font-bold text-[#a111a8] mt-0.5">{filteredProducts.length} Items</p>
           </div>
         </div>
       </div>
@@ -135,7 +135,7 @@ export const CategoryProducts: React.FC = () => {
         onClearAll={handleClearAll}
       />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container max-w-7xl mx-auto px-4 py-8">
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <AnimatePresence mode="popLayout">

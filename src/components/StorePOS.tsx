@@ -166,7 +166,7 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
     <div className="relative h-full">
       {/* POS Search & Selection */}
       <div className="space-y-6">
-        <div className="bg-white/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-sm flex gap-4 sticky top-0 z-10">
+        <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex gap-4 sticky top-0 z-10">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input 
@@ -192,19 +192,19 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
                 }
               }}
               placeholder="Search by name or barcode..." 
-              className="w-full pl-12 pr-4 py-3 bg-white/40 backdrop-blur-sm border border-white/10 rounded-2xl focus:ring-2 focus:ring-[#0c831f] outline-none font-bold text-gray-700"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#0c831f] outline-none font-bold text-gray-700"
             />
           </div>
           <button 
             onClick={onScan}
-            className="bg-gray-900/80 backdrop-blur-sm text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-gray-900 transition-all"
+            className="bg-gray-900 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-gray-800 transition-all shadow-[0_4px_14px_rgba(0,0,0,0.1)]"
           >
             <Scan size={20} /> Scan
           </button>
           {posCart.length > 0 && (
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="bg-[#0c831f] text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-lg shadow-[#0c831f]/20 hover:bg-[#0a6c19] transition-all relative"
+              className="bg-[#ff3269] text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 shadow-[0_4px_14px_rgba(255,50,105,0.3)] hover:bg-[#e62d5f] transition-all relative"
             >
               <ShoppingCart size={20} />
               <span>View Cart</span>
@@ -222,19 +222,21 @@ export const StorePOS: React.FC<StorePOSProps> = ({ products, onScan, externalBa
               <button 
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-white/20 hover:border-[#0c831f] hover:shadow-lg transition-all text-left group"
+                className="bg-white p-3 rounded-[20px] border border-gray-100 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:border-gray-200 transition-all text-left flex flex-col items-start h-full"
               >
-                <div className="aspect-square bg-white/40 rounded-xl mb-3 overflow-hidden backdrop-blur-sm">
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform" referrerPolicy="no-referrer" />
+                <div className="aspect-square bg-gray-50/50 rounded-[16px] mb-3 overflow-hidden border border-gray-50 w-full relative group">
+                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
                 </div>
-                <h4 className="font-black text-gray-800 text-sm line-clamp-1">{product.name}</h4>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs font-bold text-gray-400">{product.unit}</p>
-                  <p className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${product.stock > 10 ? 'bg-green-100/50 text-green-600' : product.stock > 0 ? 'bg-yellow-100/50 text-yellow-600' : 'bg-red-100/50 text-red-600'} backdrop-blur-sm`}>
-                    Stock: {product.stock}
-                  </p>
+                <div className="flex-1 flex flex-col w-full">
+                  <h4 className="font-bold text-gray-800 text-[13px] line-clamp-2 leading-snug mb-1">{product.name}</h4>
+                  <div className="flex items-center justify-between mt-auto pt-1 w-full">
+                    <p className="text-xs font-medium text-gray-500">{product.unit}</p>
+                    <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${product.stock > 10 ? 'bg-green-50 text-green-700' : product.stock > 0 ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-700'}`}>
+                      Stock: {product.stock}
+                    </p>
+                  </div>
+                  <p className="text-sm font-black text-gray-900 mt-2">₹{product.discountPrice || product.price}</p>
                 </div>
-                <p className="text-lg font-black text-[#0c831f] mt-1">₹{product.discountPrice || product.price}</p>
               </button>
             ))}
         </div>

@@ -17,7 +17,7 @@ interface FilterBarProps {
   onClearAll: () => void;
 }
 
-export const FilterBar: React.FC<FilterBarProps> = ({
+export const FilterBar: React.FC<FilterBarProps & { className?: string }> = ({
   onPriceChange,
   onPopularOnlyChange,
   onSortChange,
@@ -26,7 +26,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   isPopularOnly,
   activeSort,
   selectedCategories,
-  onClearAll
+  onClearAll,
+  className
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -68,8 +69,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const hasActiveFilters = activePriceRange !== null || isPopularOnly || activeSort !== 'newest' || selectedCategories.length > 0;
 
   return (
-    <div className="bg-white/60 backdrop-blur-xl border-b border-white/20 sticky top-[88px] z-40 shadow-sm overflow-visible">
-      <div className="container mx-auto px-4 py-3 flex flex-wrap items-center gap-3" ref={dropdownRef}>
+    <div className={className || "bg-white/80 backdrop-blur-xl border-b border-white/20 z-30 shadow-[0_4px_30px_rgb(0,0,0,0.03)] overflow-visible"}>
+      <div className="container max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 lg:gap-4" ref={dropdownRef}>
         <div className="flex items-center gap-2 text-gray-400 font-black text-xs uppercase tracking-widest mr-2 whitespace-nowrap">
           <Filter size={14} />
           <span>Filters</span>

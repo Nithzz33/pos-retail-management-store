@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { db, auth, handleFirestoreError, OperationType, onAuthStateChanged } from '../firebase';
+import { db, auth, storage, handleFirestoreError, OperationType, onAuthStateChanged } from '../firebase';
 import { collection, onSnapshot, query, orderBy, updateDoc, doc, getDocs, writeBatch, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Order, Product, Procurement, Sale, UserProfile, Category, AssignmentLog, Offer } from '../types';
 import { Rider, riderAssignmentService, MatchingResult } from '../services/riderAssignmentService';
 import { RiderMap } from '../components/RiderMap';
@@ -57,6 +58,13 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [location.state]);
   
+  const handleTabChange = (tab: any) => {
+    setActiveTab(tab);
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   // Rider Matching State
   const [selectedOrderForMatching, setSelectedOrderForMatching] = useState<Order | null>(null);
   const [matchingResults, setMatchingResults] = useState<MatchingResult[]>([]);
@@ -89,6 +97,46 @@ export const AdminDashboard: React.FC = () => {
   const [procurementCost, setProcurementCost] = useState(0);
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    const toastId = toast.loading('Uploading image...');
+
+    try {
+      const uniqueFileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+      const storageRef = ref(storage, `images/${uniqueFileName}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        () => {},
+        (error) => {
+          console.error('Upload failed:', error);
+          toast.error('Failed to upload image', { id: toastId });
+          setIsUploadingImage(false);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setter(downloadURL);
+          toast.success('Image uploaded successfully!', { id: toastId });
+          setIsUploadingImage(false);
+        }
+      );
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image', { id: toastId });
+      setIsUploadingImage(false);
+    }
+  };
 
   const generateProductImage = async (field: 'imageUrl' | number) => {
     if (!productForm.name) {
@@ -667,12 +715,12 @@ export const AdminDashboard: React.FC = () => {
       
       {/* Sidebar Overlay for mobile */}
       <AnimatePresence>
-        {!isSidebarOpen && (
+        {isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsSidebarOpen(true)}
+            onClick={() => setIsSidebarOpen(false)}
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           />
         )}
@@ -683,8 +731,7 @@ export const AdminDashboard: React.FC = () => {
         initial={false}
         animate={{ 
           width: isSidebarOpen ? 260 : 0,
-          opacity: isSidebarOpen ? 1 : 0,
-          x: isSidebarOpen ? 0 : -260
+          opacity: isSidebarOpen ? 1 : 0
         }}
         className="bg-white border-r border-gray-200 flex flex-col h-full fixed lg:relative z-50 overflow-hidden"
       >
@@ -702,73 +749,73 @@ export const AdminDashboard: React.FC = () => {
         
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto min-w-[260px] custom-scrollbar">
           <button 
-            onClick={() => setActiveTab('overview')}
+            onClick={() => handleTabChange('overview')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'overview' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <TrendingUp size={18} className={activeTab === 'overview' ? 'text-[#0c831f]' : 'text-gray-400'} /> Overview
           </button>
           <button 
-            onClick={() => setActiveTab('orders')}
+            onClick={() => handleTabChange('orders')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'orders' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <ShoppingBag size={18} className={activeTab === 'orders' ? 'text-[#0c831f]' : 'text-gray-400'} /> Orders
           </button>
           <button 
-            onClick={() => setActiveTab('inventory')}
+            onClick={() => handleTabChange('inventory')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'inventory' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Package size={18} className={activeTab === 'inventory' ? 'text-[#0c831f]' : 'text-gray-400'} /> Inventory
           </button>
           <button 
-            onClick={() => setActiveTab('categories')}
+            onClick={() => handleTabChange('categories')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'categories' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Tag size={18} className={activeTab === 'categories' ? 'text-[#0c831f]' : 'text-gray-400'} /> Categories
           </button>
           <button 
-            onClick={() => setActiveTab('pos')}
+            onClick={() => handleTabChange('pos')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'pos' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <ShoppingCart size={18} className={activeTab === 'pos' ? 'text-[#0c831f]' : 'text-gray-400'} /> Store POS
           </button>
           <button 
-            onClick={() => setActiveTab('sales')}
+            onClick={() => handleTabChange('sales')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'sales' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Banknote size={18} className={activeTab === 'sales' ? 'text-[#0c831f]' : 'text-gray-400'} /> Store Sales
           </button>
           <button 
-            onClick={() => setActiveTab('procurement')}
+            onClick={() => handleTabChange('procurement')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'procurement' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Scan size={18} className={activeTab === 'procurement' ? 'text-[#0c831f]' : 'text-gray-400'} /> Procurement
           </button>
           <button 
-            onClick={() => setActiveTab('customers')}
+            onClick={() => handleTabChange('customers')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'customers' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Users size={18} className={activeTab === 'customers' ? 'text-[#0c831f]' : 'text-gray-400'} /> Customers
           </button>
           <button 
-            onClick={() => setActiveTab('offers')}
+            onClick={() => handleTabChange('offers')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'offers' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Tag size={18} className={activeTab === 'offers' ? 'text-[#0c831f]' : 'text-gray-400'} /> Offers
           </button>
           <button 
-            onClick={() => setActiveTab('rider-matching')}
+            onClick={() => handleTabChange('rider-matching')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-matching' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Truck size={18} className={activeTab === 'rider-matching' ? 'text-[#0c831f]' : 'text-gray-400'} /> Rider Matching
           </button>
           <button 
-            onClick={() => setActiveTab('rider-assignment-history')}
+            onClick={() => handleTabChange('rider-assignment-history')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'rider-assignment-history' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <History size={18} className={activeTab === 'rider-assignment-history' ? 'text-[#0c831f]' : 'text-gray-400'} /> Assignment History
           </button>
           <button 
-            onClick={() => setActiveTab('settings')}
+            onClick={() => handleTabChange('settings')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${activeTab === 'settings' ? 'bg-[#0c831f]/10 text-[#0c831f]' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Settings size={18} className={activeTab === 'settings' ? 'text-[#0c831f]' : 'text-gray-400'} /> Settings
@@ -2630,13 +2677,24 @@ export const AdminDashboard: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-xs font-black text-gray-400 uppercase ml-1">Image URL</label>
-                  <input 
-                    type="text" 
-                    value={categoryForm.imageUrl || ''}
-                    onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
-                    placeholder="https://..."
-                  />
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={categoryForm.imageUrl || ''}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, imageUrl: e.target.value })}
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 transition-all"
+                      placeholder="https://..."
+                    />
+                    <label className={`cursor-pointer bg-gray-100 text-gray-600 px-4 rounded-2xl font-black hover:bg-gray-200 transition-all flex items-center justify-center gap-2 ${isUploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {isUploadingImage ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageUpload(e, (url) => setCategoryForm({ ...categoryForm, imageUrl: url }))}
+                      />
+                    </label>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -2837,6 +2895,15 @@ export const AdminDashboard: React.FC = () => {
                           placeholder="https://..."
                         />
                       </div>
+                      <label className={`cursor-pointer bg-gray-100 text-gray-600 px-4 rounded-2xl font-black hover:bg-gray-200 transition-all flex items-center justify-center gap-2 ${isUploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                        {isUploadingImage ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleImageUpload(e, (url) => setProductForm({ ...productForm, imageUrl: url }))}
+                        />
+                      </label>
                       <button 
                         onClick={() => generateProductImage('imageUrl')}
                         disabled={isGeneratingImage}
@@ -2883,6 +2950,19 @@ export const AdminDashboard: React.FC = () => {
                             className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] outline-none font-bold text-gray-700 text-sm transition-all"
                             placeholder="Additional image URL..."
                           />
+                          <label className={`cursor-pointer bg-gray-100 text-gray-600 px-3 flex items-center justify-center rounded-2xl hover:bg-gray-200 transition-all ${isUploadingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <Upload size={16} />
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => handleImageUpload(e, (url) => {
+                                const newImages = [...(productForm.images || [])];
+                                newImages[idx] = url;
+                                setProductForm({ ...productForm, images: newImages });
+                              })}
+                            />
+                          </label>
                           <button 
                             onClick={() => generateProductImage(idx)}
                             disabled={isGeneratingImage}

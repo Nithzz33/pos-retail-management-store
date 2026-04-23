@@ -2,13 +2,13 @@
 @import "leaflet/dist/leaflet.css";
 
 @theme {
-  --color-app-bg: #F5F2ED;
+  --color-app-bg: #FFFFFF;
   --color-card-bg: #FFFFFF;
 }
 
 @layer base {
   body {
-    @apply bg-[#F5F2ED] min-h-screen relative overflow-x-hidden;
+    @apply bg-white text-gray-900 min-h-screen relative overflow-x-hidden;
   }
 }
 

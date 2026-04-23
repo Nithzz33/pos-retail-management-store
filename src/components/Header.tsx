@@ -97,38 +97,34 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 border-b border-gray-100 ${isScrolled ? 'bg-white shadow-md py-2' : 'bg-white py-3'}`}>
+      <header className={`sticky top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-100 transition-shadow duration-300 py-3 ${isScrolled ? 'shadow-xl' : ''}`}>
         <div className="container mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 lg:gap-8">
           {/* Logo & Location */}
           <div className="flex items-center gap-4 lg:gap-8">
-            <Link to="/" className="text-2xl lg:text-3xl font-black tracking-tighter cursor-pointer flex items-center">
-              <span className="text-[#f8cb46]">blink</span><span className="text-[#0c831f]">it</span>
+            <Link to="/" className="text-3xl lg:text-4xl font-black tracking-tight cursor-pointer flex items-center">
+              <span className="text-[#a111a8] lowercase">zepto</span>
             </Link>
             
             {/* Location */}
             <div className="hidden md:flex flex-col cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-              <div className="flex items-center gap-1 text-[10px] lg:text-xs font-black text-gray-800 uppercase tracking-wider">
-                Delivery in 8 Mins <ChevronDown size={14} className="text-[#0c831f]" />
-              </div>
-              <div className="flex items-center gap-1 text-xs lg:text-sm font-medium text-gray-500 truncate max-w-[200px]">
-                <MapPin size={14} className="text-[#0c831f] flex-shrink-0" />
-                <span className="truncate">Select your delivery location</span>
+              <div className="flex items-center gap-1 text-xs font-bold text-gray-500">
+                Select Location <ChevronDown size={16} className="text-gray-400" />
               </div>
             </div>
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-3xl relative hidden sm:block" ref={searchRef}>
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
+          <div className="flex-1 max-w-2xl relative hidden sm:block" ref={searchRef}>
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
+              {isSearching ? <Loader2 size={24} className="animate-spin" /> : <Search size={22} className="text-gray-400" />}
             </div>
             <input 
               type="text" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
-              placeholder='Search for "milk", "bread", "fruits"...' 
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3.5 pl-12 pr-10 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] transition-all outline-none text-gray-700 font-medium text-sm lg:text-base"
+              placeholder='Search for "chocolate box"' 
+              className="w-full bg-white border border-gray-200 rounded-2xl py-4 pl-14 pr-10 focus:ring-1 focus:ring-[#a111a8] focus:border-[#a111a8] transition-all outline-none text-gray-700 font-bold text-base lg:text-lg shadow-sm"
             />
             {searchTerm && (
               <button 
@@ -146,7 +142,7 @@ export const Header: React.FC = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 max-h-[400px] overflow-y-auto"
+                  className="absolute top-[calc(100%+12px)] left-0 right-0 bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden z-50 max-h-[400px] overflow-y-auto"
                 >
                   {searchResults.length > 0 ? (
                     <div className="py-2">
@@ -158,31 +154,31 @@ export const Header: React.FC = () => {
                             setShowSearchResults(false);
                             setSearchTerm('');
                           }}
-                          className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                          className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
                         >
-                          <div className="w-12 h-12 bg-white rounded-lg p-1 flex-shrink-0 border border-gray-100">
+                          <div className="w-14 h-14 bg-white rounded-xl p-1 flex-shrink-0 border border-gray-100">
                             <img src={product.imageUrl} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-gray-800 text-sm truncate group-hover:text-[#0c831f] transition-colors">{product.name}</h4>
-                            <p className="text-xs text-gray-400 font-medium">{product.unit}</p>
+                            <h4 className="font-bold text-gray-800 text-base truncate group-hover:text-[#a111a8] transition-colors">{product.name}</h4>
+                            <p className="text-xs text-gray-400 font-bold">{product.unit}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-black text-gray-900">₹{product.discountPrice || product.price}</p>
+                            <p className="font-black text-gray-900 text-lg">₹{product.discountPrice || product.price}</p>
                             {product.discountPrice && (
-                              <p className="text-[10px] text-gray-400 line-through">₹{product.price}</p>
+                              <p className="text-xs text-gray-400 line-through font-bold">₹{product.price}</p>
                             )}
                           </div>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <div className="p-8 text-center">
-                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Search size={24} className="text-gray-300" />
+                    <div className="p-12 text-center">
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search size={32} className="text-gray-300" />
                       </div>
-                      <p className="text-gray-500 font-bold">No products found for "{searchTerm}"</p>
-                      <p className="text-xs text-gray-400 mt-1">Try searching for something else</p>
+                      <p className="text-gray-900 text-lg font-black">No products found for "{searchTerm}"</p>
+                      <p className="text-sm text-gray-400 font-bold mt-2">Try searching for something else</p>
                     </div>
                   )}
                 </motion.div>
@@ -191,20 +187,19 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-6 lg:gap-8">
             {user ? (
               <div className="relative">
                 <div 
-                  className="flex items-center gap-2 cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors" 
+                  className="flex flex-col items-center justify-center cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors" 
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-200">
-                    <img src={user.photoURL || ''} alt="" referrerPolicy="no-referrer" />
+                  <div className="mb-1">
+                    <User size={24} className="text-gray-700 group-hover:text-[#a111a8] transition-colors" />
                   </div>
                   <div className="hidden md:block">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase block leading-none">Account</span>
-                    <span className="font-bold text-gray-700 group-hover:text-[#0c831f] transition-colors flex items-center gap-1 text-sm leading-none mt-1">
-                      {user.displayName?.split(' ')[0] || 'User'} <ChevronDown size={14} />
+                    <span className="font-bold text-gray-700 group-hover:text-[#a111a8] transition-colors text-xs leading-none">
+                      {user.displayName?.split(' ')[0] || 'User'}
                     </span>
                   </div>
                 </div>
@@ -217,11 +212,11 @@ export const Header: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-20"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 z-20"
                       >
                         <Link 
                           to="/order-history" 
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
+                          className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#a111a8] transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <History size={18} />
@@ -230,7 +225,7 @@ export const Header: React.FC = () => {
                         {isAdmin && (
                           <Link 
                             to="/pos-history" 
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
+                            className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#a111a8] transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <ShoppingBag size={18} />
@@ -240,21 +235,21 @@ export const Header: React.FC = () => {
                         {isAdmin && (
                           <Link 
                             to="/admin" 
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#0c831f] transition-colors"
+                            className="flex items-center gap-3 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-[#a111a8] transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <LayoutDashboard size={18} />
                             Admin Dashboard
                           </Link>
                         )}
-                        <div className="h-px bg-gray-100 my-1"></div>
+                        <div className="h-px bg-gray-100 my-2"></div>
                         <button 
                           onClick={() => {
                             logout();
                             setIsUserMenuOpen(false);
                             navigate('/');
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
+                          className="w-full flex items-center gap-3 px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
                         >
                           <User size={18} />
                           Logout
@@ -280,28 +275,36 @@ export const Header: React.FC = () => {
                     }
                   }
                 }}
-                className="font-bold text-gray-700 hover:text-[#0c831f] transition-colors px-4 py-2 hover:bg-gray-50 rounded-xl"
+                className="flex flex-col items-center justify-center cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors"
               >
-                Login
+                <div className="mb-1">
+                  <User size={24} className="text-gray-700 group-hover:text-[#a111a8] transition-colors" />
+                </div>
+                <div className="hidden md:block">
+                  <span className="font-bold text-gray-700 group-hover:text-[#a111a8] transition-colors text-xs leading-none">
+                    Login
+                  </span>
+                </div>
               </button>
             )}
 
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="bg-[#0c831f] text-white px-4 lg:px-5 py-2.5 lg:py-3 rounded-2xl flex items-center gap-3 font-black hover:bg-[#0a6c19] transition-all shadow-lg shadow-[#0c831f]/20 hover:shadow-[#0c831f]/40 hover:-translate-y-0.5"
+              className="flex flex-col items-center justify-center cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors relative"
             >
-              <ShoppingCart size={20} />
-              <div className="hidden sm:flex flex-col items-start leading-none">
-                <span className="text-[10px] text-white/80 uppercase tracking-wider">My Cart</span>
-                <span className="text-sm">
-                  {cartItems.length > 0 ? `₹${totalAmount}` : 'Empty'}
+              <div className="mb-1 relative">
+                <ShoppingCart size={24} className="text-gray-700 group-hover:text-[#a111a8] transition-colors" />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-[#a111a8] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border border-white font-bold">
+                    {cartItems.length}
+                  </span>
+                )}
+              </div>
+              <div className="hidden md:block">
+                <span className="font-bold text-gray-700 group-hover:text-[#a111a8] transition-colors text-xs leading-none">
+                  Cart
                 </span>
               </div>
-              {cartItems.length > 0 && (
-                <span className="sm:hidden absolute -top-2 -right-2 bg-gray-900 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
-                  {cartItems.length}
-                </span>
-              )}
             </button>
           </div>
         </div>
@@ -317,9 +320,49 @@ export const Header: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.length >= 2 && setShowSearchResults(true)}
-              placeholder='Search for "milk", "bread"...' 
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-[#0c831f]/20 focus:border-[#0c831f] transition-all outline-none text-gray-700 font-medium text-sm"
+              placeholder='Search for "chocolate box"' 
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 pr-10 focus:ring-1 focus:ring-[#a111a8] focus:border-[#a111a8] transition-all outline-none text-gray-700 font-bold text-sm"
             />
+          </div>
+        </div>
+
+        {/* Categories Navigation Bar */}
+        <div className="mt-4 border-t border-gray-100 pt-3 w-full">
+          <div className="container mx-auto px-4 lg:px-8">
+            <nav className="flex items-center gap-6 lg:gap-8 overflow-x-auto no-scrollbar">
+              <Link
+                to="/"
+                className={`flex items-center gap-2 pb-3 px-1 border-b-[3px] transition-all font-bold text-[15px] flex-shrink-0 ${
+                  location.pathname === '/' 
+                    ? 'border-[#a111a8] text-[#a111a8]' 
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span className={`${location.pathname === '/' ? 'opacity-100' : 'opacity-70 grayscale'}`}>
+                  <ShoppingBag size={18} />
+                </span>
+                All
+              </Link>
+              {categories.map((cat) => {
+                const isActive = location.pathname === `/category/${cat.id}`;
+                return (
+                  <Link
+                    key={cat.id}
+                    to={`/category/${cat.id}`}
+                    className={`flex items-center gap-2 pb-3 px-1 border-b-[3px] transition-all font-bold text-[15px] flex-shrink-0 ${
+                      isActive 
+                        ? 'border-[#a111a8] text-[#a111a8]' 
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <span className={`${isActive ? 'opacity-100' : 'opacity-70 grayscale'}`}>
+                      <img src={cat.imageUrl} className="w-[18px] opacity-70 mix-blend-multiply" alt="" referrerPolicy="no-referrer" />
+                    </span>
+                    {cat.name}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
         </div>
       </header>
